@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IN, ON e AT</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px 48px;
+      font-family: Georgia, serif;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in { animation: fadeIn 0.5s ease; }
+
+    .wrapper {
+      width: 100%;
+      max-width: 980px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(129,140,248,0.35);
+      border-radius: 10px;
+      padding: 10px 18px;
+      color: #818cf8;
+      font-size: 14px;
+      font-family: Georgia, serif;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s;
+      cursor: pointer;
+      min-width: 160px;
+    }
+
+    .btn-back:hover {
+      background: rgba(129,140,248,0.12);
+      border-color: #818cf8;
+      transform: translateY(-1px);
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .tag {
+      display: inline-block;
+      background: linear-gradient(90deg,#818cf8,#a78bfa);
+      color: #fff;
+      font-size: 11px;
+      font-family: monospace;
+      letter-spacing: 3px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      color: #f1f5f9;
+      font-size: 38px;
+      margin-bottom: 10px;
+      font-weight: bold;
+      letter-spacing: -1px;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      font-size: 16px;
+      font-style: italic;
+      max-width: 760px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .main-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 34px 28px;
+      backdrop-filter: blur(12px);
+      margin-bottom: 24px;
+    }
+
+    .section {
+      margin-bottom: 30px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .section:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    h2 {
+      color: #e9d5ff;
+      font-size: 28px;
+      margin-bottom: 14px;
+    }
+
+    h3 {
+      color: #c4b5fd;
+      font-size: 22px;
+      margin-bottom: 12px;
+      margin-top: 20px;
+    }
+
+    p {
+      color: #e2e8f0;
+      font-size: 17px;
+      line-height: 1.9;
+      margin-bottom: 14px;
+    }
+
+    .highlight {
+      color: #f8fafc;
+      font-weight: bold;
+    }
+
+    .info-box {
+      background: rgba(129,140,248,0.08);
+      border: 1px solid rgba(129,140,248,0.35);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin: 18px 0;
+    }
+
+    .info-box p:last-child { margin-bottom: 0; }
+
+    .mini-card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin: 16px 0 22px;
+    }
+
+    .mini-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .mini-card h4 {
+      color: #a78bfa;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .mini-card p {
+      margin-bottom: 0;
+      font-size: 15px;
+      line-height: 1.7;
+      color: #cbd5e1;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0 24px;
+      overflow: hidden;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+    }
+
+    th, td {
+      padding: 14px 14px;
+      text-align: left;
+      vertical-align: top;
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #e2e8f0;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    th {
+      background: rgba(129,140,248,0.16);
+      color: #f8fafc;
+      font-size: 15px;
+    }
+
+    .example {
+      background: rgba(255,255,255,0.04);
+      border-left: 4px solid #818cf8;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin: 12px 0;
+    }
+
+    .example .en {
+      color: #f8fafc;
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+
+    .example .pt {
+      color: #cbd5e1;
+      font-size: 15px;
+      font-style: italic;
+    }
+
+    ul {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    li {
+      color: #e2e8f0;
+      font-size: 16px;
+      line-height: 1.9;
+      margin-bottom: 6px;
+    }
+
+    .footer-note {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 14px;
+      margin-top: 8px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 720px) {
+      h1 { font-size: 30px; }
+      h2 { font-size: 24px; }
+      .main-card { padding: 24px 18px; }
+      th, td { font-size: 14px; padding: 12px 10px; }
+      .top-bar { flex-direction: column; }
+      .btn-back { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper fade-in">
+    <div class="top-bar">
+      <a href="index.html" class="btn-back">INÍCIO</a>
+      <a href="simple_present.html" class="btn-back">PRÓXIMO TÓPICO</a>
+    </div>
+
+    <div class="hero">
+      <div class="tag">TEACHER FLÁVIO</div>
+      <h1>Preposições IN, ON e AT</h1>
+      <p class="subtitle">
+        Aprenda de forma detalhada quando usar <span class="highlight">IN</span>, <span class="highlight">ON</span> e <span class="highlight">AT</span> 
+        em inglês. Esta página explica os usos mais comuns, mostra diferenças importantes e traz exemplos em inglês com tradução para o português.
+      </p>
+    </div>
+
+    <div class="main-card">
+      <section class="section">
+        <h2>Visão geral</h2>
+        <p>
+          As preposições <span class="highlight">in</span>, <span class="highlight">on</span> e <span class="highlight">at</span> aparecem com muita frequência no inglês.
+          Elas podem indicar <span class="highlight">tempo</span> e também <span class="highlight">lugar</span>. Em muitos casos, a escolha depende da ideia de
+          <span class="highlight">nível de precisão</span>:
+        </p>
+
+        <div class="mini-card-grid">
+          <div class="mini-card">
+            <h4>IN</h4>
+            <p>Usada para espaços mais amplos, períodos maiores e a ideia de “dentro de”.</p>
+          </div>
+          <div class="mini-card">
+            <h4>ON</h4>
+            <p>Usada para superfícies, dias e datas, ou algo em contato com uma linha/superfície.</p>
+          </div>
+          <div class="mini-card">
+            <h4>AT</h4>
+            <p>Usada para pontos específicos, horários exatos e locais vistos como um ponto.</p>
+          </div>
+        </div>
+
+        <table>
+          <tr>
+            <th>Preposição</th>
+            <th>Tempo</th>
+            <th>Lugar</th>
+            <th>Ideia principal</th>
+          </tr>
+          <tr>
+            <td><strong>IN</strong></td>
+            <td>Meses, anos, partes do dia, períodos longos</td>
+            <td>Cidades, países, ambientes fechados, áreas</td>
+            <td>Dentro de algo / período amplo</td>
+          </tr>
+          <tr>
+            <td><strong>ON</strong></td>
+            <td>Dias e datas</td>
+            <td>Superfícies, linhas, meios de comunicação</td>
+            <td>Sobre uma superfície / dia específico</td>
+          </tr>
+          <tr>
+            <td><strong>AT</strong></td>
+            <td>Horas, momentos exatos</td>
+            <td>Pontos específicos, endereços ou locais vistos como ponto</td>
+            <td>Ponto exato / momento exato</td>
+          </tr>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2>Quando usar IN</h2>
+        <p>
+          A preposição <span class="highlight">in</span> é usada quando queremos transmitir a ideia de
+          <span class="highlight">algo dentro de um espaço</span> ou <span class="highlight">dentro de um período mais amplo</span>.
+        </p>
+
+        <h3>1. IN para tempo</h3>
+        <p>Use <strong>in</strong> com meses, anos, estações do ano, partes do dia e períodos longos.</p>
+
+        <table>
+          <tr>
+            <th>Uso</th>
+            <th>Exemplos</th>
+          </tr>
+          <tr>
+            <td>Meses</td>
+            <td>in January, in May</td>
+          </tr>
+          <tr>
+            <td>Anos</td>
+            <td>in 2026, in 1998</td>
+          </tr>
+          <tr>
+            <td>Estações</td>
+            <td>in summer, in winter</td>
+          </tr>
+          <tr>
+            <td>Partes do dia</td>
+            <td>in the morning, in the afternoon, in the evening</td>
+          </tr>
+        </table>
+
+        <div class="example">
+          <div class="en">I was born in 1990.</div>
+          <div class="pt">Eu nasci em 1990.</div>
+        </div>
+
+        <div class="example">
+          <div class="en">We travel in July.</div>
+          <div class="pt">Nós viajamos em julho.</div>
+        </div>
+
+        <div class="example">
+          <div class="en">She studies in the evening.</div>
+          <div class="pt">Ela estuda à noite / no período da noite.</div>
+        </div>
+
+        <h3>2. IN para lugar</h3>
+        <p>
+          Use <strong>in</strong> para cidades, países, bairros, cômodos, caixas, carros e ambientes em geral quando a ideia é
+          <span class="highlight">estar dentro</span>.
+        </p>
+
+        <div class="example">
+          <div class="en">They live in Brazil.</div>
+          <div class="pt">Eles moram no Brasil.</div>
+        </div>
+
+        <div class="example">
+          <div class="en">My keys are in the bag.</div>
+          <div class="pt">Minhas chaves estão na bolsa.</div>
+        </div>
+
+        <div class="example">
+          <div class="en">The children are in the classroom.</div>
+          <div class="pt">As crianças estão na sala de aula.</div>
+        </div>
+
+        <div class="info-box">
+          <p><strong>Observação:</strong> em inglês, usamos <strong>in the car</strong> para dizer “no carro” quando a ideia é estar dentro dele.</p>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Quando usar ON</h2>
+        <p>
+          A preposição <span class="highlight">on</span> costuma passar a ideia de
+          <span class="highlight">contato com uma superfície</span>. No tempo, ela é usada para
+          <span class="highlight">dias e datas específicas</span>.
+        </p>
+
+        <h3>1. ON para tempo</h3>
+        <p>Use <strong>on</strong> com dias da semana e datas completas.</p>
+
+        <table>
+          <tr>
+            <th>Uso</th>
+            <th>Exemplos</th>
+          </tr>
+          <tr>
+            <td>Dias da semana</td>
+            <td>on Monday, on Friday</td>
+          </tr>
+          <tr>
+            <td>Datas</td>
+            <td>on July 10, on May 5th</td>
+          </tr>
+          <tr>
+            <td>Dia + parte do dia específica</td>
+            <td>on Monday morning, on Friday night</td>
+          </tr>
+        </table>
+
+        <div class="example">
+          <div class="en">I have English class on Tuesday.</div>
+          <div class="pt">Eu tenho aula de inglês na terça-feira.</div>
+        </div>
+
+        <div class="example">
+          <div class="en">The meeting is on April 25th.</div>
+          <div class="pt">A reunião é em 25 de abril.</div>
+        </div>
+
+        <div class="example">
+          <div class="en">We will travel on Saturday morning.</div>
+          <div class="pt">Nós viajaremos no sábado de manhã.</div>
+        </div>
+
+        <h3>2. ON para lugar</h3>
+        <p>
+          Use <strong>on</strong> quando algo está <span class="highlight">sobre uma superfície</span>, como mesa, parede, piso ou página.
+        </p>
+
+        <div class="example">
+          <div class="en">The book is on the table.</div>
+          <div class="pt">O livro está sobre a mesa.</div>
+        </div>
+
+        <div class="example">
+          <div class="en">There is a picture on the wall.</div>
+          <div class="pt">Há um quadro na parede.</div>
+        </div>
+
+        <div class="example">
+          <div class="en">Your name is on the list.</div>
+          <div class="pt">Seu nome está na lista.</div>
+        </div>
+
+        <h3>3. Outros usos comuns de ON</h3>
+        <ul>
+          <li><strong>on the bus</strong>, <strong>on the train</strong>, <strong>on the plane</strong>;</li>
+          <li><strong>on TV</strong>, <strong>on the internet</strong>, <strong>on the phone</strong>.</li>
+        </ul>
+
+        <div class="example">
+          <div class="en">She saw the news on TV.</div>
+          <div class="pt">Ela viu a notícia na TV.</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Quando usar AT</h2>
+        <p>
+          A preposição <span class="highlight">at</span> indica um <span class="highlight">ponto específico</span>, tanto no tempo quanto no espaço.
+          Ela é mais pontual do que <strong>in</strong> e <strong>on</strong>.
+        </p>
+
+        <h3>1. AT para tempo</h3>
+        <p>Use <strong>at</strong> com horas e momentos exatos.</p>
+
+        <table>
+          <tr>
+            <th>Uso</th>
+            <th>Exemplos</th>
+          </tr>
+          <tr>
+            <td>Horas</td>
+            <td>at 7:00, at noon, at midnight</td>
+          </tr>
+          <tr>
+            <td>Momentos específicos</td>
+            <td>at the moment, at lunchtime, at night</td>
+          </tr>
+        </table>
+
+        <div class="example">
+          <div class="en">The class starts at 8:30.</div>
+          <div class="pt">A aula começa às 8h30.</div>
+        </div>
+
+        <div class="example">
+          <div class="en">He usually sleeps at midnight.</div>
+          <div class="pt">Ele normalmente dorme à meia-noite.</div>
+        </div>
+
+        <div class="example">
+          <div class="en">I study at night.</div>
+          <div class="pt">Eu estudo à noite.</div>
+        </div>
+
+        <h3>2. AT para lugar</h3>
+        <p>
+          Use <strong>at</strong> com locais vistos como <span class="highlight">um ponto no mapa</span> ou um destino específico.
+        </p>
+
+        <div class="example">
+          <div class="en">She is at school now.</div>
+          <div class="pt">Ela está na escola agora.</div>
+        </div>
+
+        <div class="example">
+          <div class="en">I am waiting at the bus stop.</div>
+          <div class="pt">Estou esperando no ponto de ônibus.</div>
+        </div>
+
+        <div class="example">
+          <div class="en">They arrived at the airport early.</div>
+          <div class="pt">Eles chegaram ao aeroporto cedo.</div>
+        </div>
+
+        <div class="info-box">
+          <p>
+            <strong>Atenção:</strong> em muitos casos, <strong>at school</strong>, <strong>at home</strong>, <strong>at work</strong> e
+            <strong>at the airport</strong> tratam o lugar como um ponto de referência, não como um espaço interno detalhado.
+          </p>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Comparando IN, ON e AT</h2>
+        <p>
+          Uma forma prática de entender essas preposições é imaginar uma escala do mais geral ao mais específico:
+        </p>
+
+        <table>
+          <tr>
+            <th>Nível</th>
+            <th>Preposição</th>
+            <th>Exemplo</th>
+            <th>Tradução</th>
+          </tr>
+          <tr>
+            <td>Mais amplo</td>
+            <td><strong>IN</strong></td>
+            <td>in July / in Brazil</td>
+            <td>em julho / no Brasil</td>
+          </tr>
+          <tr>
+            <td>Intermediário</td>
+            <td><strong>ON</strong></td>
+            <td>on Monday / on the table</td>
+            <td>na segunda-feira / sobre a mesa</td>
+          </tr>
+          <tr>
+            <td>Mais específico</td>
+            <td><strong>AT</strong></td>
+            <td>at 8:00 / at the station</td>
+            <td>às 8h / na estação</td>
+          </tr>
+        </table>
+
+        <h3>Exemplo de comparação no tempo</h3>
+        <div class="example">
+          <div class="en">The course starts in June.</div>
+          <div class="pt">O curso começa em junho.</div>
+        </div>
+        <div class="example">
+          <div class="en">The course starts on Monday.</div>
+          <div class="pt">O curso começa na segunda-feira.</div>
+        </div>
+        <div class="example">
+          <div class="en">The course starts at 9:00.</div>
+          <div class="pt">O curso começa às 9h.</div>
+        </div>
+
+        <h3>Exemplo de comparação no lugar</h3>
+        <div class="example">
+          <div class="en">She lives in São Paulo.</div>
+          <div class="pt">Ela mora em São Paulo.</div>
+        </div>
+        <div class="example">
+          <div class="en">The notebook is on the desk.</div>
+          <div class="pt">O caderno está sobre a escrivaninha.</div>
+        </div>
+        <div class="example">
+          <div class="en">She is at the doctor's office.</div>
+          <div class="pt">Ela está no consultório médico.</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Erros comuns</h2>
+        <ul>
+          <li>Não diga <strong>in Monday</strong>. O correto é <strong>on Monday</strong>.</li>
+          <li>Não diga <strong>on 8:00</strong>. O correto é <strong>at 8:00</strong>.</li>
+          <li>Não diga <strong>at Brazil</strong>. O correto é <strong>in Brazil</strong>.</li>
+          <li>Para “à noite”, normalmente usamos <strong>at night</strong>, e não <strong>in the night</strong> em situações comuns.</li>
+        </ul>
+
+        <table>
+          <tr>
+            <th>Errado</th>
+            <th>Correto</th>
+            <th>Tradução</th>
+          </tr>
+          <tr>
+            <td>in Monday</td>
+            <td>on Monday</td>
+            <td>na segunda-feira</td>
+          </tr>
+          <tr>
+            <td>on 7:00</td>
+            <td>at 7:00</td>
+            <td>às 7h</td>
+          </tr>
+          <tr>
+            <td>at Brazil</td>
+            <td>in Brazil</td>
+            <td>no Brasil</td>
+          </tr>
+          <tr>
+            <td>in the table</td>
+            <td>on the table</td>
+            <td>sobre a mesa</td>
+          </tr>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2>Resumo final</h2>
+        <p>
+          Use <span class="highlight">in</span> para meses, anos, partes do dia, cidades, países e espaços internos.
+          Use <span class="highlight">on</span> para dias, datas e superfícies.
+          Use <span class="highlight">at</span> para horas, momentos exatos e pontos específicos.
+        </p>
+        <p>
+          A melhor estratégia é observar a lógica da frase: ela fala de algo <span class="highlight">amplo</span>,
+          <span class="highlight">intermediário</span> ou <span class="highlight">pontual</span>? Essa pergunta resolve grande parte dos casos.
+        </p>
+      </section>
+    </div>
+
+    <p class="footer-note">
+      Material em HTML no mesmo estilo visual do arquivo de referência, adaptado para uma página explicativa.
+    </p>
+  </div>
+</body>
+</html>
