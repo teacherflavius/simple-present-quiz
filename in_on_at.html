@@ -13,6 +13,39 @@
   <script src="quiz_core.js?v=no-switch-student-20260426"></script>
   <script src="notify_teacher.js"></script>
   <style>
+    .top-nav {
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto 20px;
+      font-family: Georgia, serif;
+    }
+
+    .top-nav .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(129,140,248,0.35);
+      border-radius: 10px;
+      padding: 9px 18px;
+      color: #818cf8;
+      font-size: 14px;
+      font-family: Georgia, serif;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s;
+      cursor: pointer;
+    }
+
+    .top-nav .btn-back:hover {
+      background: rgba(129,140,248,0.12);
+      border-color: #818cf8;
+      transform: translateY(-1px);
+    }
+
+    #root > div > div:first-child {
+      display: none !important;
+    }
+
     .video-section {
       width: 100%;
       max-width: 520px;
@@ -54,6 +87,10 @@
   </style>
 </head>
 <body>
+  <div class="top-nav">
+    <a href="index.html" class="btn-back">INÍCIO</a>
+  </div>
+
   <div class="video-section">
     <p>Assista esse vídeo antes de responder o quiz</p>
     <div class="video-wrapper">
