@@ -4,6 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Ordenar Frases - Simple Present</title>
+  <script>
+    window.QUIZ_RESULTS_ENDPOINT = "https://script.google.com/macros/s/AKfycbyr53U30DMi3Shft8V2fLfQI0qDrQ1CrMB6XTwhEAy2I16jPI4m7fpFCiul9Dw2jpEL/exec";
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="quiz_core.js"></script>
+  <script src="word_order_tracking.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -289,7 +296,6 @@
 
       if (!wordArea || !targetWord || targetWord === draggingElement || !wordArea.contains(targetWord)) return;
 
-      const draggingRect = draggingElement.getBoundingClientRect();
       const targetRect = targetWord.getBoundingClientRect();
       const shouldInsertAfter = event.clientX > targetRect.left + targetRect.width / 2 || event.clientY > targetRect.top + targetRect.height / 2;
 
