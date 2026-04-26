@@ -287,5 +287,14 @@
     ReactDOM.createRoot(root).render(e(App));
   }
 
-  window.QuizCore = { renderQuiz, getResults, downloadCsv, resultsToCsv, clearCurrentStudent };
+  window.QuizCore = {
+    renderQuiz,
+    getResults,
+    downloadCsv,
+    resultsToCsv,
+    clearCurrentStudent,
+    getCurrentStudent,
+    setCurrentStudent,
+    saveResult
+  };
 })();
