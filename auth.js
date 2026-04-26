@@ -23,11 +23,6 @@
     return new URL("login.html", window.location.href).href;
   }
 
-  function getFunctionsBaseUrl() {
-    if (!isConfigured()) return null;
-    return window.SUPABASE_CONFIG.url.replace(/\/$/, "") + "/functions/v1";
-  }
-
   function showConfigWarning() {
     if (document.getElementById("supabase-config-warning")) return;
     const warning = document.createElement("div");
@@ -103,34 +98,6 @@
     });
 
     return columns;
-  }
-
-  async function notifyEnrollment(payload) {
-    const functionsBaseUrl = getFunctionsBaseUrl();
-    if (!functionsBaseUrl || !window.SUPABASE_CONFIG || !window.SUPABASE_CONFIG.anonKey) return { ok: false, reason: "missing_config" };
-
-    try {
-      const response = await fetch(functionsBaseUrl + "/notify-enrollment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": window.SUPABASE_CONFIG.anonKey,
-          "Authorization": "Bearer " + window.SUPABASE_CONFIG.anonKey
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        const details = await response.text().catch(function () { return ""; });
-        console.warn("Notificação de matrícula não enviada:", response.status, details);
-        return { ok: false, status: response.status, details: details };
-      }
-
-      return { ok: true };
-    } catch (error) {
-      console.warn("Não foi possível enviar notificação de matrícula:", error);
-      return { ok: false, error: error };
-    }
   }
 
   async function getSession() {
@@ -240,16 +207,6 @@
 
     if (response.error) throw response.error;
 
-    const notificationPayload = {
-      name: data.name,
-      email: data.email,
-      cpf: cleanCpf,
-      whatsapp: cleanWhatsapp,
-      pix_key: pixKey,
-      availability: availability,
-      enrollment_code: enrollmentCode
-    };
-
     if (response.data && response.data.user) {
       const userId = response.data.user.id;
 
@@ -284,8 +241,6 @@
         created_at: new Date().toISOString()
       }, availabilityColumns));
     }
-
-    await notifyEnrollment(notificationPayload);
 
     return {
       user: response.data ? response.data.user : null,
@@ -378,7 +333,6 @@
     signOut,
     getProfile,
     saveActivityResult,
-    getMyResults,
-    notifyEnrollment
+    getMyResults
   };
 })();
