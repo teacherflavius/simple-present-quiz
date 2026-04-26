@@ -4,6 +4,7 @@
 alter table public.profiles
   add column if not exists cpf text,
   add column if not exists whatsapp text,
+  add column if not exists pix_key text,
   add column if not exists enrollment_code text,
   add column if not exists enrolled boolean not null default false;
 
@@ -12,9 +13,12 @@ create unique index if not exists profiles_enrollment_code_unique
   on public.profiles (enrollment_code)
   where enrollment_code is not null;
 
--- Opcional: busca mais rápida por CPF e WhatsApp.
+-- Opcional: busca mais rápida por CPF, WhatsApp e chave PIX.
 create index if not exists profiles_cpf_idx
   on public.profiles (cpf);
 
 create index if not exists profiles_whatsapp_idx
   on public.profiles (whatsapp);
+
+create index if not exists profiles_pix_key_idx
+  on public.profiles (pix_key);
