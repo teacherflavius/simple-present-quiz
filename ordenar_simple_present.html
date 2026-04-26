@@ -110,7 +110,7 @@
     }
     .word:active { cursor: grabbing; }
     .word.dragging {
-      opacity: 0.2;
+      opacity: 0.25;
       transform: scale(0.96);
     }
     .ghost {
@@ -192,8 +192,9 @@
     let current = 0;
     let score = 0;
     let words = [];
-    let draggingIndex = null;
+    let draggingElement = null;
     let ghost = null;
+    let activePointerId = null;
 
     const app = document.getElementById("app");
     const progressBar = document.getElementById("progressBar");
@@ -202,7 +203,19 @@
       progressBar.style.width = `${(current / exercises.length) * 100}%`;
     }
 
+    function cleanupDrag() {
+      document.removeEventListener("pointermove", onDrag);
+      document.removeEventListener("pointerup", endDrag);
+      document.removeEventListener("pointercancel", endDrag);
+      document.querySelectorAll(".word.dragging").forEach(item => item.classList.remove("dragging"));
+      document.querySelectorAll(".ghost").forEach(item => item.remove());
+      ghost = null;
+      draggingElement = null;
+      activePointerId = null;
+    }
+
     function renderExercise() {
+      cleanupDrag();
       updateProgress();
       const exercise = exercises[current];
       words = [...exercise.words];
@@ -224,32 +237,39 @@
     function renderWords() {
       const wordArea = document.getElementById("wordArea");
       wordArea.innerHTML = "";
-      words.forEach((word, index) => {
+      words.forEach((word) => {
         const item = document.createElement("div");
         item.className = "word";
         item.textContent = word;
-        item.dataset.index = index;
         item.addEventListener("pointerdown", startDrag);
         wordArea.appendChild(item);
       });
+      syncWordsFromDom();
+    }
+
+    function syncWordsFromDom() {
+      const wordArea = document.getElementById("wordArea");
+      if (!wordArea) return;
+      words = Array.from(wordArea.querySelectorAll(".word")).map(item => item.textContent);
     }
 
     function startDrag(event) {
       event.preventDefault();
-      const item = event.currentTarget;
-      draggingIndex = Number(item.dataset.index);
-      item.classList.add("dragging");
-      item.setPointerCapture(event.pointerId);
+      cleanupDrag();
+
+      draggingElement = event.currentTarget;
+      activePointerId = event.pointerId;
+      draggingElement.classList.add("dragging");
 
       ghost = document.createElement("div");
       ghost.className = "ghost";
-      ghost.textContent = item.textContent;
+      ghost.textContent = draggingElement.textContent;
       document.body.appendChild(ghost);
       moveGhost(event.clientX, event.clientY);
 
-      item.addEventListener("pointermove", onDrag);
-      item.addEventListener("pointerup", endDrag);
-      item.addEventListener("pointercancel", endDrag);
+      document.addEventListener("pointermove", onDrag, { passive: false });
+      document.addEventListener("pointerup", endDrag);
+      document.addEventListener("pointercancel", endDrag);
     }
 
     function moveGhost(x, y) {
@@ -259,35 +279,36 @@
     }
 
     function onDrag(event) {
+      if (activePointerId !== null && event.pointerId !== activePointerId) return;
       event.preventDefault();
       moveGhost(event.clientX, event.clientY);
 
+      const wordArea = document.getElementById("wordArea");
       const target = document.elementFromPoint(event.clientX, event.clientY);
-      const wordTarget = target && target.closest && target.closest(".word");
-      if (!wordTarget) return;
+      const targetWord = target && target.closest ? target.closest(".word") : null;
 
-      const targetIndex = Number(wordTarget.dataset.index);
-      if (targetIndex === draggingIndex || Number.isNaN(targetIndex)) return;
+      if (!wordArea || !targetWord || targetWord === draggingElement || !wordArea.contains(targetWord)) return;
 
-      const [moved] = words.splice(draggingIndex, 1);
-      words.splice(targetIndex, 0, moved);
-      draggingIndex = targetIndex;
-      renderWords();
-      const newItem = document.querySelector(`.word[data-index="${draggingIndex}"]`);
-      if (newItem) newItem.classList.add("dragging");
+      const draggingRect = draggingElement.getBoundingClientRect();
+      const targetRect = targetWord.getBoundingClientRect();
+      const shouldInsertAfter = event.clientX > targetRect.left + targetRect.width / 2 || event.clientY > targetRect.top + targetRect.height / 2;
+
+      if (shouldInsertAfter) {
+        wordArea.insertBefore(draggingElement, targetWord.nextSibling);
+      } else {
+        wordArea.insertBefore(draggingElement, targetWord);
+      }
+      syncWordsFromDom();
     }
 
     function endDrag(event) {
-      const items = document.querySelectorAll(".word");
-      items.forEach(item => item.classList.remove("dragging"));
-      if (ghost) {
-        ghost.remove();
-        ghost = null;
-      }
-      draggingIndex = null;
+      if (activePointerId !== null && event.pointerId !== activePointerId) return;
+      cleanupDrag();
+      syncWordsFromDom();
     }
 
     function checkAnswer() {
+      syncWordsFromDom();
       const exercise = exercises[current];
       const feedback = document.getElementById("feedback");
       const userAnswer = words.join(" ");
@@ -297,6 +318,7 @@
         score++;
         feedback.className = "feedback ok";
         feedback.textContent = "Correto!";
+        cleanupDrag();
         setTimeout(nextExercise, 650);
       } else {
         feedback.className = "feedback error";
@@ -305,6 +327,7 @@
     }
 
     function resetCurrent() {
+      cleanupDrag();
       words = [...exercises[current].words];
       renderWords();
       const feedback = document.getElementById("feedback");
@@ -313,6 +336,7 @@
     }
 
     function nextExercise() {
+      cleanupDrag();
       current++;
       if (current >= exercises.length) {
         renderResult();
@@ -322,6 +346,7 @@
     }
 
     function renderResult() {
+      cleanupDrag();
       progressBar.style.width = "100%";
       app.innerHTML = `
         <div class="result">
@@ -337,10 +362,14 @@
     }
 
     function restart() {
+      cleanupDrag();
       current = 0;
       score = 0;
       renderExercise();
     }
+
+    window.addEventListener("blur", cleanupDrag);
+    window.addEventListener("pagehide", cleanupDrag);
 
     renderExercise();
   </script>
