@@ -25,7 +25,7 @@
 
   function getFunctionsBaseUrl() {
     if (!isConfigured()) return null;
-    return window.SUPABASE_CONFIG.url.replace(".supabase.co", ".functions.supabase.co");
+    return window.SUPABASE_CONFIG.url.replace(/\/$/, "") + "/functions/v1";
   }
 
   function showConfigWarning() {
@@ -107,10 +107,10 @@
 
   async function notifyEnrollment(payload) {
     const functionsBaseUrl = getFunctionsBaseUrl();
-    if (!functionsBaseUrl || !window.SUPABASE_CONFIG || !window.SUPABASE_CONFIG.anonKey) return;
+    if (!functionsBaseUrl || !window.SUPABASE_CONFIG || !window.SUPABASE_CONFIG.anonKey) return { ok: false, reason: "missing_config" };
 
     try {
-      await fetch(functionsBaseUrl + "/notify-enrollment", {
+      const response = await fetch(functionsBaseUrl + "/notify-enrollment", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -119,8 +119,17 @@
         },
         body: JSON.stringify(payload)
       });
+
+      if (!response.ok) {
+        const details = await response.text().catch(function () { return ""; });
+        console.warn("Notificação de matrícula não enviada:", response.status, details);
+        return { ok: false, status: response.status, details: details };
+      }
+
+      return { ok: true };
     } catch (error) {
       console.warn("Não foi possível enviar notificação de matrícula:", error);
+      return { ok: false, error: error };
     }
   }
 
