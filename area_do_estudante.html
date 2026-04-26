@@ -19,6 +19,7 @@
       padding: 32px 16px 48px;
       font-family: Georgia, serif;
     }
+    body.auth-checking .container { display: none; }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     .container { width: 100%; max-width: 620px; animation: fadeInUp 0.5s ease; }
     .top-links { display: flex; gap: 10px; justify-content: center; margin-bottom: 24px; flex-wrap: wrap; }
@@ -38,7 +39,7 @@
     @media (min-width: 680px) { .menu-grid { grid-template-columns: 1fr 1fr; } }
   </style>
 </head>
-<body>
+<body class="auth-checking">
   <div class="container">
     <div class="top-links">
       <a class="top-link" href="index.html">HOME</a>
@@ -84,21 +85,37 @@
   <script>
     let currentSession = null;
 
-    async function updateStatus() {
-      const status = document.getElementById("loginStatus");
-      if (!Auth.isConfigured()) {
-        Auth.showConfigWarning();
-        status.textContent = "Supabase ainda não configurado.";
-        return;
+    function redirectToLogin() {
+      window.location.href = "login.html?next=" + encodeURIComponent("area_do_estudante.html");
+    }
+
+    async function guardStudentArea() {
+      if (!window.Auth || !Auth.isConfigured()) {
+        if (window.Auth && Auth.showConfigWarning) Auth.showConfigWarning();
+        document.body.classList.remove("auth-checking");
+        const status = document.getElementById("loginStatus");
+        if (status) status.textContent = "Supabase ainda não configurado.";
+        return false;
       }
 
       currentSession = await Auth.getSession();
-      if (currentSession && currentSession.user) {
-        const profile = await Auth.getProfile();
-        status.textContent = `Logado como ${profile && profile.name ? profile.name : currentSession.user.email}.`;
-      } else {
-        status.textContent = "Faça login ou matrícula para acessar esta área.";
+
+      if (!currentSession || !currentSession.user) {
+        redirectToLogin();
+        return false;
       }
+
+      document.body.classList.remove("auth-checking");
+      return true;
+    }
+
+    async function updateStatus() {
+      const isAllowed = await guardStudentArea();
+      if (!isAllowed) return;
+
+      const status = document.getElementById("loginStatus");
+      const profile = await Auth.getProfile();
+      status.textContent = `Logado como ${profile && profile.name ? profile.name : currentSession.user.email}.`;
     }
 
     document.querySelectorAll(".protected-link").forEach(function (link) {
@@ -106,15 +123,12 @@
         event.preventDefault();
         const target = link.dataset.target || link.getAttribute("href") || "#";
 
-        if (!Auth.isConfigured()) {
-          Auth.showConfigWarning();
-          return;
+        if (!currentSession) {
+          currentSession = await Auth.getSession();
         }
 
-        const session = currentSession || await Auth.getSession();
-        if (!session) {
-          const next = target && target !== "#" ? target : "area_do_estudante.html";
-          window.location.href = "login.html?next=" + encodeURIComponent(next);
+        if (!currentSession) {
+          redirectToLogin();
           return;
         }
 
