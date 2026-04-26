@@ -44,6 +44,23 @@
     document.body.appendChild(warning);
   }
 
+  function generateEnrollmentCode() {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let code = "";
+    for (let i = 0; i < 5; i++) {
+      code += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return code;
+  }
+
+  function normalizeCpf(cpf) {
+    return String(cpf || "").replace(/\D/g, "");
+  }
+
+  function normalizeWhatsapp(whatsapp) {
+    return String(whatsapp || "").replace(/\D/g, "");
+  }
+
   async function getSession() {
     const client = getClient();
     if (!client) return null;
@@ -93,6 +110,66 @@
       });
     }
     return response.data;
+  }
+
+  async function enrollStudent(data) {
+    const client = getClient();
+    if (!client) throw new Error("Supabase não configurado.");
+
+    const enrollmentCode = generateEnrollmentCode();
+    const cleanCpf = normalizeCpf(data.cpf);
+    const cleanWhatsapp = normalizeWhatsapp(data.whatsapp);
+
+    if (!data.name || !data.email || !data.password || !cleanCpf || !cleanWhatsapp) {
+      throw new Error("Preencha todos os campos da matrícula.");
+    }
+
+    if (cleanCpf.length !== 11) {
+      throw new Error("CPF inválido. Informe 11 dígitos.");
+    }
+
+    if (cleanWhatsapp.length < 10) {
+      throw new Error("WhatsApp inválido.");
+    }
+
+    const response = await client.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          name: data.name,
+          cpf: cleanCpf,
+          whatsapp: cleanWhatsapp,
+          enrollment_code: enrollmentCode,
+          enrolled: true
+        },
+        emailRedirectTo: getRedirectUrl()
+      }
+    });
+
+    if (response.error) throw response.error;
+
+    if (response.data && response.data.user) {
+      const profilePayload = {
+        id: response.data.user.id,
+        name: data.name,
+        email: data.email,
+        cpf: cleanCpf,
+        whatsapp: cleanWhatsapp,
+        enrollment_code: enrollmentCode,
+        enrolled: true
+      };
+
+      const profileResponse = await client.from("profiles").upsert(profilePayload).select().single();
+      if (profileResponse.error) {
+        throw new Error("Conta criada, mas não foi possível registrar a matrícula em profiles. Verifique se a tabela profiles possui as colunas cpf, whatsapp, enrollment_code e enrolled.");
+      }
+    }
+
+    return {
+      user: response.data ? response.data.user : null,
+      enrollment_code: enrollmentCode
+    };
   }
 
   async function signIn(email, password) {
@@ -159,10 +236,12 @@
     isConfigured,
     getClient,
     showConfigWarning,
+    generateEnrollmentCode,
     getSession,
     getUser,
     requireAuth,
     signUp,
+    enrollStudent,
     signIn,
     signOut,
     getProfile,
