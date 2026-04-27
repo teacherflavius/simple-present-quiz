@@ -2,6 +2,14 @@
   var script = document.currentScript;
   var data = script ? script.dataset : {};
 
+  function loadAnimationScript() {
+    if (document.querySelector('script[src^="animated_cards.js"]')) return;
+    var animationScript = document.createElement("script");
+    animationScript.src = "animated_cards.js?v=20260427-3";
+    animationScript.defer = true;
+    document.body.appendChild(animationScript);
+  }
+
   function buildLink(href, icon, label) {
     var target = href && href !== "#" ? ' target="_blank" rel="noopener noreferrer"' : "";
     return '<a class="menu-button" href="' + href + '"' + target + '><span><span class="icon">' + icon + '</span>' + label + '</span><span class="arrow">›</span></a>';
@@ -32,6 +40,8 @@
           buildLink(whatsappLink, "💬", "GRUPO DE WHATSAPP") +
         '</div>' +
       '</div>';
+
+    loadAnimationScript();
   }
 
   if (document.readyState === "loading") {
