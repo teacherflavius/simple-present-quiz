@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Frequência do Aluno - Teacher Flávio</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase_config.js?v=20260427-7"></script>
+  <script src="auth.js?v=20260427-7"></script>
+  <link rel="stylesheet" href="professor.css?v=20260427-7">
+</head>
+<body class="auth-checking">
+  <div class="container">
+    <div class="top-links">
+      <a class="top-link" href="frequencia_dos_alunos.html">FREQUÊNCIA DOS ALUNOS</a>
+      <a class="top-link" href="professor.html">ÁREA DO PROFESSOR</a>
+    </div>
+
+    <div class="header">
+      <div><span class="badge">TEACHER FLÁVIO</span></div>
+      <h1>Frequência do Aluno</h1>
+      <div id="adminStatus" class="status">Verificando credenciais de professor...</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="panel">
+      <h2 id="studentName">Aluno</h2>
+      <div id="studentEmail" class="empty">E-mail não informado</div>
+    </div>
+
+    <div class="panel">
+      <h2>Registrar frequência</h2>
+      <form id="frequencyForm">
+        <label for="classDate">Data da aula</label>
+        <input id="classDate" type="date" required />
+
+        <label for="attendanceStatus">Situação</label>
+        <select id="attendanceStatus" required>
+          <option value="Compareceu">Compareceu</option>
+          <option value="Faltou">Faltou</option>
+        </select>
+
+        <label for="classNotes">Lições feitas / observações da aula</label>
+        <textarea id="classNotes" placeholder="Ex.: fez exercício de leitura, revisou simple present, faltou sem justificativa..."></textarea>
+
+        <button class="delete-button" type="submit">SALVAR REGISTRO</button>
+        <div id="formMessage" class="empty"></div>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h2>Histórico de frequência</h2>
+      <div id="frequencyList" class="empty">Carregando frequência...</div>
+    </div>
+  </div>
+  <script src="frequencia_aluno.js?v=20260427-7"></script>
+  <script src="animated_cards.js?v=20260427-7"></script>
+</body>
+</html>
