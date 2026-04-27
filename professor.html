@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Área do Professor - Teacher Flávio</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase_config.js"></script>
+  <script src="auth.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { min-height: 100vh; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 16px 48px; font-family: Georgia, serif; color: #f1f5f9; }
+    body.auth-checking .container { display: none; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .container { width: 100%; max-width: 920px; animation: fadeInUp 0.5s ease; }
+    .top-links { display: flex; gap: 10px; justify-content: center; margin-bottom: 24px; flex-wrap: wrap; }
+    .top-link { display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(129,140,248,0.35); border-radius: 10px; padding: 9px 16px; color: #818cf8; font-size: 13px; font-family: Georgia, serif; text-decoration: none; }
+    .badge { display: inline-block; background: linear-gradient(90deg, #818cf8, #a78bfa); color: #fff; font-size: 11px; font-family: monospace; letter-spacing: 3px; padding: 4px 14px; border-radius: 20px; margin-bottom: 12px; }
+    .header { text-align: center; margin-bottom: 30px; }
+    .header h1 { color: #f1f5f9; font-size: 38px; font-weight: bold; letter-spacing: -1px; margin-bottom: 8px; }
+    .status { margin-top: 12px; color: #cbd5e1; font-size: 13px; line-height: 1.5; }
+    .divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(129,140,248,0.3), transparent); margin-bottom: 28px; }
+    .panel { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 22px; backdrop-filter: blur(12px); margin-bottom: 16px; }
+    .panel h2 { font-size: 20px; margin-bottom: 14px; color: #f1f5f9; }
+    .student-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 15px; margin-bottom: 12px; }
+    .student-card strong { display: block; color: #f1f5f9; font-size: 16px; margin-bottom: 7px; }
+    .student-card p { color: #cbd5e1; font-size: 13px; line-height: 1.55; margin-bottom: 4px; }
+    .empty, .error { color: #94a3b8; font-size: 14px; line-height: 1.5; }
+    .error { color: #fca5a5; }
+  </style>
+</head>
+<body class="auth-checking">
+  <div class="container">
+    <div class="top-links">
+      <a class="top-link" href="index.html">HOME</a>
+      <a class="top-link" href="area_do_estudante.html">ÁREA DO ESTUDANTE</a>
+    </div>
+
+    <div class="header">
+      <div><span class="badge">TEACHER FLÁVIO</span></div>
+      <h1>Área do Professor</h1>
+      <div id="adminStatus" class="status">Verificando credenciais de professor...</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="panel">
+      <h2>Alunos matriculados</h2>
+      <div id="studentsList" class="empty">Carregando alunos...</div>
+    </div>
+  </div>
+
+  <script>
+    let currentSession = null;
+
+    function redirectToLogin() {
+      window.location.href = "login.html?next=" + encodeURIComponent("professor.html");
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function formatAvailability(profile) {
+      const days = [
+        ["seg", "Segunda"],
+        ["ter", "Terça"],
+        ["qua", "Quarta"],
+        ["qui", "Quinta"],
+        ["sex", "Sexta"]
+      ];
+      const availability = profile.availability || {};
+      const parts = days.map(function (day) {
+        const values = Array.isArray(availability[day[0]]) ? availability[day[0]] : [];
+        return values.length ? day[1] + ": " + values.join(", ") : "";
+      }).filter(Boolean);
+      return parts.length ? parts.join(" | ") : "Não informado";
+    }
+
+    async function isTeacherAdmin() {
+      const client = Auth.getClient();
+      const email = currentSession && currentSession.user ? currentSession.user.email : "";
+      const response = await client
+        .from("teacher_admins")
+        .select("id, email")
+        .ilike("email", email)
+        .maybeSingle();
+
+      if (response.error) throw response.error;
+      return !!response.data;
+    }
+
+    async function loadStudents() {
+      const client = Auth.getClient();
+      const response = await client
+        .from("profiles")
+        .select("id, name, email, cpf, whatsapp, enrollment_code, enrolled, availability")
+        .eq("enrolled", true)
+        .order("name", { ascending: true });
+
+      if (response.error) throw response.error;
+      return response.data || [];
+    }
+
+    async function renderStudents() {
+      const list = document.getElementById("studentsList");
+      try {
+        const students = await loadStudents();
+
+        if (!students.length) {
+          list.className = "empty";
+          list.textContent = "Nenhum aluno matriculado encontrado.";
+          return;
+        }
+
+        list.className = "";
+        list.innerHTML = students.map(function (student) {
+          return '<div class="student-card">' +
+            '<strong>' + escapeHtml(student.name || "Aluno sem nome") + '</strong>' +
+            '<p><b>E-mail:</b> ' + escapeHtml(student.email || "Não informado") + '</p>' +
+            '<p><b>WhatsApp:</b> ' + escapeHtml(student.whatsapp || "Não informado") + '</p>' +
+            '<p><b>CPF:</b> ' + escapeHtml(student.cpf || "Não informado") + '</p>' +
+            '<p><b>Código de matrícula:</b> ' + escapeHtml(student.enrollment_code || "Não informado") + '</p>' +
+            '<p><b>Disponibilidade:</b> ' + escapeHtml(formatAvailability(student)) + '</p>' +
+          '</div>';
+        }).join("");
+      } catch (error) {
+        list.className = "error";
+        list.textContent = "Não foi possível carregar os alunos. Verifique se o SQL da área do professor foi executado no Supabase.";
+      }
+    }
+
+    async function guardProfessorArea() {
+      const status = document.getElementById("adminStatus");
+
+      if (!window.Auth || !Auth.isConfigured()) {
+        if (window.Auth && Auth.showConfigWarning) Auth.showConfigWarning();
+        status.textContent = "Supabase ainda não configurado.";
+        document.body.classList.remove("auth-checking");
+        return;
+      }
+
+      currentSession = await Auth.getSession();
+
+      if (!currentSession || !currentSession.user) {
+        redirectToLogin();
+        return;
+      }
+
+      try {
+        const allowed = await isTeacherAdmin();
+        if (!allowed) {
+          status.textContent = "Acesso negado. Esta página é exclusiva para professores autorizados.";
+          document.body.classList.remove("auth-checking");
+          document.getElementById("studentsList").className = "error";
+          document.getElementById("studentsList").textContent = "Seu e-mail não está cadastrado como professor administrador.";
+          return;
+        }
+
+        status.textContent = "Professor autenticado: " + currentSession.user.email + ".";
+        document.body.classList.remove("auth-checking");
+        await renderStudents();
+      } catch (error) {
+        status.textContent = "Não foi possível verificar as credenciais de professor.";
+        document.body.classList.remove("auth-checking");
+        document.getElementById("studentsList").className = "error";
+        document.getElementById("studentsList").textContent = "Execute o arquivo supabase_professor_admin.sql no Supabase e cadastre seu e-mail como professor.";
+      }
+    }
+
+    guardProfessorArea();
+  </script>
+</body>
+</html>
