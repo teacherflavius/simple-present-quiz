@@ -1,0 +1,15 @@
+@import url('aula_template.css?v=20260427-5');
+body { color: #f1f5f9; }
+.container { max-width: 920px; }
+.panel { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 22px; backdrop-filter: blur(12px); margin-bottom: 16px; position: relative; z-index: 1; }
+.panel h2 { font-size: 20px; margin-bottom: 14px; color: #f1f5f9; }
+.student-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 15px; margin-bottom: 12px; }
+.student-card strong { display: block; color: #f1f5f9; font-size: 16px; margin-bottom: 7px; }
+.student-card p { color: #cbd5e1; font-size: 13px; line-height: 1.55; margin-bottom: 4px; }
+.empty, .error { color: #94a3b8; font-size: 14px; line-height: 1.5; }
+.error { color: #fca5a5; }
+.pill { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px; margin-left: 6px; background: rgba(110,231,183,0.12); color: #6ee7b7; border: 1px solid rgba(110,231,183,0.3); }
+.pill.pending { background: rgba(251,191,36,0.12); color: #fde68a; border-color: rgba(251,191,36,0.3); }
+.delete-button { margin-top: 12px; width: 100%; border: 1px solid rgba(248,113,113,0.45); background: rgba(248,113,113,0.10); color: #fca5a5; border-radius: 12px; padding: 11px 14px; font-family: Georgia, serif; font-size: 13px; font-weight: bold; cursor: pointer; letter-spacing: 0.4px; }
+.delete-button:hover { background: rgba(248,113,113,0.18); border-color: rgba(248,113,113,0.75); }
+.delete-button:disabled { opacity: 0.55; cursor: not-allowed; }
