@@ -1,1 +1,34 @@
-document.addEventListener('DOMContentLoaded',function(){var s=document.currentScript,d=s.dataset;document.body.innerHTML='<div class="container"><div class="top-links"><a class="top-link" href="'+d.back+'">'+d.day.toUpperCase()+'</a><a class="top-link" href="links_das_aulas.html">LINKS DAS AULAS</a></div><div class="header"><span class="badge">TEACHER FLÁVIO</span><h1>'+d.day+'<br>'+d.time+'</h1></div><div class="divider"></div><div class="menu-grid"><a class="menu-button" href="#"><span><span class="icon">▶️</span>ASSISTIR A AULA</span><span class="arrow">›</span></a><a class="menu-button" href="#"><span><span class="icon">📄</span>MATERIAL DA AULA</span><span class="arrow">›</span></a><a class="menu-button" href="#"><span><span class="icon">💬</span>GRUPO DE WHATSAPP</span><span class="arrow">›</span></a></div></div>';});
+(function () {
+  var script = document.currentScript;
+  var data = script ? script.dataset : {};
+
+  function renderLessonPage() {
+    var day = data.day || "Aula";
+    var time = data.time || "";
+    var back = data.back || "links_das_aulas.html";
+
+    document.body.innerHTML =
+      '<div class="container">' +
+        '<div class="top-links">' +
+          '<a class="top-link" href="' + back + '">' + day.toUpperCase() + '</a>' +
+          '<a class="top-link" href="links_das_aulas.html">LINKS DAS AULAS</a>' +
+        '</div>' +
+        '<div class="header">' +
+          '<span class="badge">TEACHER FLÁVIO</span>' +
+          '<h1>' + day + '<br>' + time + '</h1>' +
+        '</div>' +
+        '<div class="divider"></div>' +
+        '<div class="menu-grid">' +
+          '<a class="menu-button" href="#"><span><span class="icon">▶️</span>ASSISTIR A AULA</span><span class="arrow">›</span></a>' +
+          '<a class="menu-button" href="#"><span><span class="icon">📄</span>MATERIAL DA AULA</span><span class="arrow">›</span></a>' +
+          '<a class="menu-button" href="#"><span><span class="icon">💬</span>GRUPO DE WHATSAPP</span><span class="arrow">›</span></a>' +
+        '</div>' +
+      '</div>';
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", renderLessonPage);
+  } else {
+    renderLessonPage();
+  }
+})();
