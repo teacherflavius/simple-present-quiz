@@ -1,4 +1,30 @@
 (function () {
+  function loadAnimatedCardsAssets() {
+    function inject() {
+      if (!document.querySelector('link[href^="animated_cards.css"]')) {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = "animated_cards.css?v=20260427-3";
+        document.head.appendChild(link);
+      }
+
+      if (!document.querySelector('script[src^="animated_cards.js"]')) {
+        const script = document.createElement("script");
+        script.src = "animated_cards.js?v=20260427-3";
+        script.defer = true;
+        document.body.appendChild(script);
+      }
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", inject);
+    } else {
+      inject();
+    }
+  }
+
+  loadAnimatedCardsAssets();
+
   function isConfigured() {
     return !!(
       window.SUPABASE_CONFIG &&
