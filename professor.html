@@ -5,34 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Área do Professor - Teacher Flávio</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase_config.js?v=20260427-2"></script>
-  <script src="auth.js?v=20260427-2"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { min-height: 100vh; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 16px 48px; font-family: Georgia, serif; color: #f1f5f9; }
-    body.auth-checking .container { display: none; }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    .container { width: 100%; max-width: 920px; animation: fadeInUp 0.5s ease; }
-    .top-links { display: flex; gap: 10px; justify-content: center; margin-bottom: 24px; flex-wrap: wrap; }
-    .top-link { display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(129,140,248,0.35); border-radius: 10px; padding: 9px 16px; color: #818cf8; font-size: 13px; font-family: Georgia, serif; text-decoration: none; }
-    .badge { display: inline-block; background: linear-gradient(90deg, #818cf8, #a78bfa); color: #fff; font-size: 11px; font-family: monospace; letter-spacing: 3px; padding: 4px 14px; border-radius: 20px; margin-bottom: 12px; }
-    .header { text-align: center; margin-bottom: 30px; }
-    .header h1 { color: #f1f5f9; font-size: 38px; font-weight: bold; letter-spacing: -1px; margin-bottom: 8px; }
-    .status { margin-top: 12px; color: #cbd5e1; font-size: 13px; line-height: 1.5; }
-    .divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(129,140,248,0.3), transparent); margin-bottom: 28px; }
-    .panel { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 22px; backdrop-filter: blur(12px); margin-bottom: 16px; }
-    .panel h2 { font-size: 20px; margin-bottom: 14px; color: #f1f5f9; }
-    .student-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 15px; margin-bottom: 12px; }
-    .student-card strong { display: block; color: #f1f5f9; font-size: 16px; margin-bottom: 7px; }
-    .student-card p { color: #cbd5e1; font-size: 13px; line-height: 1.55; margin-bottom: 4px; }
-    .empty, .error { color: #94a3b8; font-size: 14px; line-height: 1.5; }
-    .error { color: #fca5a5; }
-    .pill { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px; margin-left: 6px; background: rgba(110,231,183,0.12); color: #6ee7b7; border: 1px solid rgba(110,231,183,0.3); }
-    .pill.pending { background: rgba(251,191,36,0.12); color: #fde68a; border-color: rgba(251,191,36,0.3); }
-    .delete-button { margin-top: 12px; width: 100%; border: 1px solid rgba(248,113,113,0.45); background: rgba(248,113,113,0.10); color: #fca5a5; border-radius: 12px; padding: 11px 14px; font-family: Georgia, serif; font-size: 13px; font-weight: bold; cursor: pointer; letter-spacing: 0.4px; }
-    .delete-button:hover { background: rgba(248,113,113,0.18); border-color: rgba(248,113,113,0.75); }
-    .delete-button:disabled { opacity: 0.55; cursor: not-allowed; }
-  </style>
+  <script src="supabase_config.js?v=20260427-5"></script>
+  <script src="auth.js?v=20260427-5"></script>
+  <link rel="stylesheet" href="professor.css?v=20260427-5">
 </head>
 <body class="auth-checking">
   <div class="container">
@@ -54,132 +29,7 @@
       <div id="studentsList" class="empty">Carregando alunos...</div>
     </div>
   </div>
-
-  <script>
-    let currentSession = null;
-
-    function redirectToLogin() {
-      window.location.href = "login.html?next=" + encodeURIComponent("professor.html");
-    }
-
-    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
-
-    async function waitForAuthResources() {
-      for (let i = 0; i < 10; i++) {
-        if (window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured()) return true;
-        await sleep(150);
-      }
-      return !!(window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured());
-    }
-
-    function escapeHtml(value) {
-      return String(value || "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/\"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
-    function isEnrolled(student) {
-      return student.enrolled === true || student.enrolled === "true" || !!student.enrollment_code;
-    }
-
-    function formatAvailability(profile) {
-      const days = [["seg", "Segunda"], ["ter", "Terça"], ["qua", "Quarta"], ["qui", "Quinta"], ["sex", "Sexta"]];
-      const availability = profile.availability || {};
-      const parts = days.map(function (day) {
-        const values = Array.isArray(availability[day[0]]) ? availability[day[0]] : [];
-        return values.length ? day[1] + ": " + values.join(", ") : "";
-      }).filter(Boolean);
-      return parts.length ? parts.join(" | ") : "Não informado";
-    }
-
-    async function loadStudents() {
-      const client = Auth.getClient();
-      const response = await client.rpc("get_teacher_students");
-      if (response.error) throw response.error;
-      return response.data || [];
-    }
-
-    async function deleteStudent(userId, studentName, button) {
-      const confirmed = window.confirm("Tem certeza que deseja excluir a matrícula e os dados de " + (studentName || "este aluno") + "? Essa ação não pode ser desfeita.");
-      if (!confirmed) return;
-
-      button.disabled = true;
-      button.textContent = "EXCLUINDO...";
-
-      try {
-        const client = Auth.getClient();
-        const response = await client.rpc("delete_teacher_student", { target_user_id: userId });
-        if (response.error) throw response.error;
-        await renderStudents();
-      } catch (error) {
-        alert("Não foi possível excluir o aluno: " + (error.message || "erro desconhecido") + ". Reexecute o SQL atualizado no Supabase.");
-        button.disabled = false;
-        button.textContent = "EXCLUIR MATRÍCULA E DADOS DO ALUNO";
-      }
-    }
-
-    async function renderStudents() {
-      const list = document.getElementById("studentsList");
-      try {
-        const students = await loadStudents();
-
-        if (!students.length) {
-          list.className = "empty";
-          list.textContent = "Nenhum aluno encontrado. Verifique se há registros na tabela profiles.";
-          return;
-        }
-
-        list.className = "";
-        list.innerHTML = students.map(function (student) {
-          const enrolled = isEnrolled(student);
-          return '<div class="student-card">' +
-            '<strong>' + escapeHtml(student.name || "Aluno sem nome") +
-            '<span class="pill ' + (enrolled ? '' : 'pending') + '">' + (enrolled ? 'Matriculado' : 'Cadastro sem matrícula confirmada') + '</span></strong>' +
-            '<p><b>E-mail:</b> ' + escapeHtml(student.email || "Não informado") + '</p>' +
-            '<p><b>WhatsApp:</b> ' + escapeHtml(student.whatsapp || "Não informado") + '</p>' +
-            '<p><b>CPF:</b> ' + escapeHtml(student.cpf || "Não informado") + '</p>' +
-            '<p><b>Código de matrícula:</b> ' + escapeHtml(student.enrollment_code || "Não informado") + '</p>' +
-            '<p><b>Disponibilidade:</b> ' + escapeHtml(formatAvailability(student)) + '</p>' +
-            '<button class="delete-button" data-user-id="' + escapeHtml(student.user_id || student.id) + '" data-student-name="' + escapeHtml(student.name || student.email || "Aluno") + '">EXCLUIR MATRÍCULA E DADOS DO ALUNO</button>' +
-          '</div>';
-        }).join("");
-
-        document.querySelectorAll(".delete-button").forEach(function (button) {
-          button.addEventListener("click", function () {
-            deleteStudent(button.dataset.userId, button.dataset.studentName, button);
-          });
-        });
-      } catch (error) {
-        list.className = "error";
-        list.textContent = "Não foi possível carregar os alunos: " + (error.message || "erro desconhecido") + ". Reexecute o arquivo supabase_professor_admin.sql no Supabase, trocando professor@email.com pelo seu e-mail.";
-      }
-    }
-
-    async function guardProfessorArea() {
-      const status = document.getElementById("adminStatus");
-      const resourcesReady = await waitForAuthResources();
-
-      if (!resourcesReady) {
-        status.textContent = "Não foi possível carregar a autenticação. Atualize a página ou limpe o cache do navegador.";
-        document.body.classList.remove("auth-checking");
-        return;
-      }
-
-      currentSession = await Auth.getSession();
-      if (!currentSession || !currentSession.user) {
-        redirectToLogin();
-        return;
-      }
-
-      status.textContent = "Professor autenticado: " + currentSession.user.email + ".";
-      document.body.classList.remove("auth-checking");
-      await renderStudents();
-    }
-
-    guardProfessorArea();
-  </script>
+  <script src="professor.js?v=20260427-5"></script>
+  <script src="animated_cards.js?v=20260427-5"></script>
 </body>
 </html>
