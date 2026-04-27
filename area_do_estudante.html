@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Área do Estudante - Teacher Flávio</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase_config.js"></script>
-  <script src="auth.js"></script>
+  <script src="supabase_config.js?v=20260427-1"></script>
+  <script src="auth.js?v=20260427-1"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -94,12 +94,27 @@
       window.location.href = "login.html?next=" + encodeURIComponent("area_do_estudante.html");
     }
 
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function waitForAuthResources() {
+      for (let i = 0; i < 10; i++) {
+        if (window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured()) {
+          return true;
+        }
+        await sleep(150);
+      }
+      return !!(window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured());
+    }
+
     async function guardStudentArea() {
-      if (!window.Auth || !Auth.isConfigured()) {
-        if (window.Auth && Auth.showConfigWarning) Auth.showConfigWarning();
+      const status = document.getElementById("loginStatus");
+      const resourcesReady = await waitForAuthResources();
+
+      if (!resourcesReady) {
         document.body.classList.remove("auth-checking");
-        const status = document.getElementById("loginStatus");
-        if (status) status.textContent = "Supabase ainda não configurado.";
+        if (status) status.textContent = "Não foi possível carregar a autenticação. Atualize a página ou limpe o cache do navegador.";
         return false;
       }
 
