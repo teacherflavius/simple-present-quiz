@@ -5,36 +5,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Meu Perfil - Teacher Flávio</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase_config.js"></script>
-  <script src="auth.js"></script>
+  <script src="supabase_config.js?v=20260428-4"></script>
+  <script src="auth.js?v=20260428-4"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { min-height: 100vh; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); padding: 32px 16px 48px; font-family: Georgia, serif; color: #f1f5f9; }
-    .container { width: 100%; max-width: 920px; margin: 0 auto; }
+    .container { width: 100%; max-width: 860px; margin: 0 auto; }
     .top { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
-    .btn { display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(129,140,248,0.35); border-radius: 10px; padding: 10px 18px; color: #818cf8; font-size: 14px; font-family: Georgia, serif; text-decoration: none; cursor: pointer; }
+    .btn, button { display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(129,140,248,0.35); border-radius: 10px; padding: 10px 18px; color: #818cf8; font-size: 14px; font-family: Georgia, serif; text-decoration: none; cursor: pointer; }
     .header { text-align: center; margin-bottom: 28px; }
     .badge { display: inline-block; background: linear-gradient(90deg,#818cf8,#a78bfa); color:#fff; font-size:11px; font-family:monospace; letter-spacing:3px; padding:4px 14px; border-radius:20px; margin-bottom:12px; }
     h1 { font-size: 34px; margin-bottom: 8px; }
     p { color: #94a3b8; line-height: 1.6; }
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
-    .stat, .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 18px; }
-    .stat strong { display: block; font-size: 28px; color: #a78bfa; margin-bottom: 4px; }
-    .stat span { color: #94a3b8; font-size: 13px; }
-    table { width: 100%; border-collapse: collapse; min-width: 720px; }
-    th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 14px; }
-    th { color: #a78bfa; font-family: monospace; letter-spacing: 1px; font-size: 12px; text-transform: uppercase; }
-    td { color: #e2e8f0; }
-    .table-wrap { overflow-x: auto; }
-    .empty { text-align: center; color: #94a3b8; padding: 32px 12px; }
-    @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+    .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 22px; backdrop-filter: blur(12px); margin-bottom: 16px; }
+    .card h2 { font-size: 20px; margin-bottom: 14px; color: #f1f5f9; }
+    .readonly { background: rgba(129,140,248,0.08); border: 1px solid rgba(129,140,248,0.22); border-radius: 14px; padding: 14px; margin-bottom: 16px; color: #cbd5e1; }
+    label { display: block; color: #cbd5e1; font-size: 13px; margin-bottom: 6px; }
+    input { width: 100%; background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 13px 14px; color: #f1f5f9; font-size: 15px; font-family: Georgia, serif; margin-bottom: 12px; }
+    input:focus { outline: none; border-color: #818cf8; }
+    .field-note { color: #cbd5e1; background: rgba(129,140,248,0.08); border: 1px solid rgba(129,140,248,0.22); border-radius: 12px; padding: 11px 13px; font-size: 13px; line-height: 1.5; margin: -2px 0 12px; }
+    .availability-block { margin: 18px 0; }
+    .availability-title { color: #f1f5f9; font-size: 18px; font-weight: bold; margin-bottom: 8px; }
+    .availability-help { color: #94a3b8; font-size: 13px; line-height: 1.5; margin-bottom: 14px; }
+    .availability-grid { width: 100%; display: grid; grid-template-columns: 82px repeat(5, minmax(0, 1fr)); gap: 8px 6px; align-items: center; }
+    .grid-head { color: #cbd5e1; text-align: center; font-size: 13px; font-weight: bold; white-space: nowrap; }
+    .time-label { color: #f1f5f9; font-size: 13px; white-space: nowrap; }
+    .slot { display: flex; justify-content: center; align-items: center; min-height: 38px; margin: 0; }
+    .slot input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+    .slot-box { width: 28px; height: 28px; border: 3px solid rgba(203,213,225,0.55); border-radius: 7px; background: rgba(255,255,255,0.04); display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s ease; cursor: pointer; }
+    .slot input:checked + .slot-box { background: linear-gradient(135deg,#818cf8,#a78bfa); border-color: #c4b5fd; box-shadow: 0 0 0 4px rgba(129,140,248,0.16); }
+    .slot input:checked + .slot-box::after { content: "✓"; color: #fff; font-size: 18px; font-weight: bold; }
+    .primary { width: 100%; padding: 14px; border-radius: 12px; border: none; background: linear-gradient(90deg,#818cf8,#a78bfa); color: #fff; font-size: 16px; font-weight: bold; margin-top: 8px; }
+    .message { min-height: 20px; color: #94a3b8; font-size: 13px; margin-top: 10px; line-height: 1.5; }
+    .message.success { color: #6ee7b7; }
+    .message.error { color: #fca5a5; }
+    @media (max-width: 560px) { .availability-grid { grid-template-columns: 68px repeat(5, minmax(0, 1fr)); gap: 8px 3px; } .grid-head, .time-label { font-size: 12px; } .slot-box { width: 25px; height: 25px; } }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="top">
-      <a class="btn" href="index.html">INÍCIO</a>
-      <button class="btn" onclick="Auth.signOut()">SAIR</button>
+      <a class="btn" href="area_do_estudante.html">ÁREA DO ESTUDANTE</a>
+      <button type="button" onclick="Auth.signOut()">SAIR</button>
     </div>
 
     <div class="header">
@@ -43,79 +55,149 @@
       <p id="studentInfo">Carregando seus dados...</p>
     </div>
 
-    <div class="grid">
-      <div class="stat"><strong id="totalActivities">0</strong><span>Atividades feitas</span></div>
-      <div class="stat"><strong id="averageScore">0%</strong><span>Média geral</span></div>
-      <div class="stat"><strong id="bestScore">0%</strong><span>Melhor desempenho</span></div>
-    </div>
-
     <div class="card">
-      <div class="table-wrap" id="history"></div>
+      <h2>Dados da matrícula</h2>
+      <div class="readonly">
+        <p><b>E-mail de login:</b> <span id="profileEmail">Carregando...</span></p>
+        <p><b>Número de matrícula:</b> <span id="enrollmentCode">Carregando...</span></p>
+      </div>
+
+      <form id="profileForm">
+        <label for="name">Nome completo</label>
+        <input id="name" type="text" required />
+
+        <label for="cpf">CPF</label>
+        <input id="cpf" type="text" inputmode="numeric" maxlength="14" required />
+
+        <label for="whatsapp">WhatsApp</label>
+        <input id="whatsapp" type="tel" inputmode="tel" required />
+
+        <label for="pixKey">Chave PIX</label>
+        <input id="pixKey" type="text" required />
+        <div class="field-note">A chave PIX é usada apenas em situações em que o professor precise fazer reembolso de algum valor para o aluno.</div>
+
+        <div class="availability-block">
+          <div class="availability-title">Disponibilidade para aulas</div>
+          <p class="availability-help">Marque todos os dias e horários, de segunda a sexta, em que você estará disponível para fazer aulas de inglês.</p>
+          <div class="availability-grid" id="availabilityGrid"></div>
+        </div>
+
+        <button class="primary" type="submit">SALVAR ALTERAÇÕES</button>
+        <div id="message" class="message"></div>
+      </form>
     </div>
   </div>
 
   <script>
-    function formatDate(value) {
-      try { return new Date(value).toLocaleString("pt-BR"); }
-      catch (_) { return value || ""; }
+    const availabilityDays = [
+      { key: "seg", label: "Seg" },
+      { key: "ter", label: "Ter" },
+      { key: "qua", label: "Qua" },
+      { key: "qui", label: "Qui" },
+      { key: "sex", label: "Sex" }
+    ];
+
+    const availabilityFullNames = { seg: "Segunda", ter: "Terça", qua: "Quarta", qui: "Quinta", sex: "Sexta" };
+    const availabilityHours = [
+      { key: "09", label: "9h - 10h" },
+      { key: "10", label: "10h - 11h" },
+      { key: "12", label: "12h - 13h" },
+      { key: "13", label: "13h - 14h" },
+      { key: "15", label: "15h - 16h" },
+      { key: "17", label: "17h - 18h" },
+      { key: "18", label: "18h - 19h" },
+      { key: "20", label: "20h - 21h" },
+      { key: "21", label: "21h - 22h" }
+    ];
+
+    function onlyDigits(value) { return String(value || "").replace(/\D/g, ""); }
+
+    function formatCpf(value) {
+      const digits = onlyDigits(value).slice(0, 11);
+      return digits.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
     }
 
-    function escapeHtml(value) {
-      return String(value || "").replace(/[&<>"]/g, function (char) {
-        return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" })[char];
+    function buildAvailabilityGrid() {
+      const grid = document.getElementById("availabilityGrid");
+      grid.innerHTML = '<div></div>' + availabilityDays.map(day => `<div class="grid-head" title="${availabilityFullNames[day.key]}">${day.label}</div>`).join("");
+      availabilityHours.forEach(hour => {
+        grid.insertAdjacentHTML("beforeend", `<div class="time-label">${hour.label}</div>`);
+        availabilityDays.forEach(day => {
+          const id = `availability_${day.key}_${hour.key}`;
+          grid.insertAdjacentHTML("beforeend", `
+            <label class="slot" for="${id}" title="${availabilityFullNames[day.key]}, ${hour.label}">
+              <input type="checkbox" id="${id}" name="availability" data-day="${day.key}" data-hour="${hour.key}" />
+              <span class="slot-box"></span>
+            </label>
+          `);
+        });
       });
     }
 
-    async function init() {
+    function getAvailability() {
+      const availability = { seg: [], ter: [], qua: [], qui: [], sex: [] };
+      document.querySelectorAll('input[name="availability"]:checked').forEach(input => {
+        availability[input.dataset.day].push(input.dataset.hour);
+      });
+      return availability;
+    }
+
+    function setAvailability(availability) {
+      document.querySelectorAll('input[name="availability"]').forEach(input => input.checked = false);
+      availabilityDays.forEach(day => {
+        const hours = Array.isArray(availability && availability[day.key]) ? availability[day.key] : [];
+        hours.forEach(hour => {
+          const input = document.getElementById(`availability_${day.key}_${hour}`);
+          if (input) input.checked = true;
+        });
+      });
+    }
+
+    function setMessage(text, type) {
+      const message = document.getElementById("message");
+      message.className = "message" + (type ? " " + type : "");
+      message.textContent = text || "";
+    }
+
+    async function loadProfile() {
       const user = await Auth.requireAuth();
       if (!user) return;
 
       const profile = await Auth.getProfile();
       document.getElementById("studentInfo").textContent = `${profile.name || "Aluno"} · ${profile.email || user.email}`;
-
-      const results = await Auth.getMyResults();
-      document.getElementById("totalActivities").textContent = results.length;
-
-      if (results.length) {
-        const avg = Math.round(results.reduce((sum, item) => sum + Number(item.percentage || 0), 0) / results.length);
-        const best = Math.max(...results.map(item => Number(item.percentage || 0)));
-        document.getElementById("averageScore").textContent = avg + "%";
-        document.getElementById("bestScore").textContent = best + "%";
-      }
-
-      const history = document.getElementById("history");
-      if (!results.length) {
-        history.innerHTML = '<div class="empty">Você ainda não concluiu nenhuma atividade.</div>';
-        return;
-      }
-
-      history.innerHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Atividade</th>
-              <th>Tipo</th>
-              <th>Acertos</th>
-              <th>%</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${results.map(item => `
-              <tr>
-                <td>${formatDate(item.completed_at)}</td>
-                <td>${escapeHtml(item.activity_title)}</td>
-                <td>${escapeHtml(item.activity_type)}</td>
-                <td>${item.score}/${item.total}</td>
-                <td>${item.percentage}%</td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
-      `;
+      document.getElementById("profileEmail").textContent = profile.email || user.email || "Não informado";
+      document.getElementById("enrollmentCode").textContent = profile.enrollment_code || "Não informado";
+      document.getElementById("name").value = profile.name || "";
+      document.getElementById("cpf").value = formatCpf(profile.cpf || "");
+      document.getElementById("whatsapp").value = profile.whatsapp || "";
+      document.getElementById("pixKey").value = profile.pix_key || "";
+      setAvailability(profile.availability || {});
     }
 
-    init();
+    document.getElementById("cpf").addEventListener("input", function () { this.value = formatCpf(this.value); });
+
+    document.getElementById("profileForm").addEventListener("submit", async function (event) {
+      event.preventDefault();
+      setMessage("Salvando alterações...");
+
+      try {
+        const updatedProfile = await Auth.updateProfile({
+          name: document.getElementById("name").value.trim(),
+          cpf: document.getElementById("cpf").value.trim(),
+          whatsapp: document.getElementById("whatsapp").value.trim(),
+          pix_key: document.getElementById("pixKey").value.trim(),
+          availability: getAvailability()
+        });
+
+        document.getElementById("studentInfo").textContent = `${updatedProfile.name || "Aluno"} · ${updatedProfile.email || document.getElementById("profileEmail").textContent}`;
+        setMessage("Perfil atualizado com sucesso.", "success");
+      } catch (error) {
+        setMessage(error.message || "Não foi possível salvar as alterações.", "error");
+      }
+    });
+
+    buildAvailabilityGrid();
+    loadProfile();
   </script>
 </body>
 </html>
