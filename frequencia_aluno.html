@@ -33,7 +33,7 @@
       <h2>Registrar frequência</h2>
       <form id="frequencyForm">
         <label for="classDate">Data da aula</label>
-        <input id="classDate" type="date" required />
+        <input id="classDate" type="text" inputmode="numeric" maxlength="8" placeholder="DD/MM/AA" pattern="\d{2}/\d{2}/\d{2}" required />
 
         <label for="attendanceStatus">Situação</label>
         <select id="attendanceStatus" required>
@@ -54,7 +54,7 @@
       <div id="frequencyList" class="empty">Carregando frequência...</div>
     </div>
   </div>
-  <script src="frequencia_aluno.js?v=20260427-7"></script>
+  <script src="frequencia_aluno.js?v=20260428-1"></script>
   <script src="animated_cards.js?v=20260427-7"></script>
 </body>
 </html>
