@@ -33,6 +33,35 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
+function formatDateInput(value) {
+  const digits = String(value || "").replace(/\D/g, "").slice(0, 6);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return digits.slice(0, 2) + "/" + digits.slice(2);
+  return digits.slice(0, 2) + "/" + digits.slice(2, 4) + "/" + digits.slice(4);
+}
+
+function parseBrazilianShortDate(value) {
+  const match = String(value || "").match(/^(\d{2})\/(\d{2})\/(\d{2})$/);
+  if (!match) throw new Error("Informe a data no formato DD/MM/AA.");
+
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = 2000 + Number(match[3]);
+  const date = new Date(year, month - 1, day);
+
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    throw new Error("Data inválida. Use o formato DD/MM/AA.");
+  }
+
+  return String(year) + "-" + String(month).padStart(2, "0") + "-" + String(day).padStart(2, "0");
+}
+
+function formatDateForDisplay(value) {
+  const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return value || "";
+  return match[3] + "/" + match[2] + "/" + match[1].slice(2);
+}
+
 async function loadFrequency() {
   const client = Auth.getClient();
   const response = await client.rpc("get_teacher_student_frequency", { target_user_id: selectedStudent.userId });
@@ -42,7 +71,7 @@ async function loadFrequency() {
 
 function renderHistoryItem(record) {
   return '<div class="student-card">' +
-    '<strong>' + escapeHtml(record.class_date) + ' — ' + escapeHtml(record.attendance_status) + '</strong>' +
+    '<strong>' + escapeHtml(formatDateForDisplay(record.class_date)) + ' — ' + escapeHtml(record.attendance_status) + '</strong>' +
     '<p><b>Lições / observações:</b> ' + escapeHtml(record.class_notes || 'Sem observações.') + '</p>' +
   '</div>';
 }
@@ -71,11 +100,10 @@ async function saveFrequency(event) {
   message.textContent = "Salvando...";
 
   try {
-    const classDate = document.getElementById("classDate").value;
+    const classDateInput = document.getElementById("classDate").value;
+    const classDate = parseBrazilianShortDate(classDateInput);
     const attendanceStatus = document.getElementById("attendanceStatus").value;
     const classNotes = document.getElementById("classNotes").value.trim();
-
-    if (!classDate) throw new Error("Informe a data da aula.");
 
     const client = Auth.getClient();
     const response = await client.rpc("save_teacher_student_frequency", {
@@ -126,6 +154,13 @@ async function guardPage() {
   status.textContent = "Professor autenticado: " + currentSession.user.email + ".";
   document.body.classList.remove("auth-checking");
   await renderFrequencyHistory();
+}
+
+const classDateInput = document.getElementById("classDate");
+if (classDateInput) {
+  classDateInput.addEventListener("input", function () {
+    this.value = formatDateInput(this.value);
+  });
 }
 
 document.getElementById("frequencyForm").addEventListener("submit", saveFrequency);
