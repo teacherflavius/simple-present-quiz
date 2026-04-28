@@ -37,6 +37,18 @@ before update on public.student_frequency
 for each row
 execute function public.set_updated_at();
 
+create or replace function public.is_teacher_admin()
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.teacher_admins ta
+    where lower(ta.email) = lower(auth.jwt() ->> 'email')
+  );
+$$;
+
 create or replace function public.get_teacher_student_frequency(target_user_id uuid)
 returns table (
   id text,
@@ -51,15 +63,8 @@ language plpgsql
 security definer
 set search_path = public
 as $$
-declare
-  requester_email text;
 begin
-  requester_email := auth.jwt() ->> 'email';
-
-  if requester_email is null or not exists (
-    select 1 from public.teacher_admins ta
-    where lower(ta.email) = lower(requester_email)
-  ) then
+  if not public.is_teacher_admin() then
     raise exception 'Acesso negado: usuário não cadastrado como professor.';
   end if;
 
@@ -92,15 +97,9 @@ security definer
 set search_path = public
 as $$
 declare
-  requester_email text;
   inserted_id uuid;
 begin
-  requester_email := auth.jwt() ->> 'email';
-
-  if requester_email is null or not exists (
-    select 1 from public.teacher_admins ta
-    where lower(ta.email) = lower(requester_email)
-  ) then
+  if not public.is_teacher_admin() then
     raise exception 'Acesso negado: usuário não cadastrado como professor.';
   end if;
 
@@ -117,3 +116,64 @@ end;
 $$;
 
 grant execute on function public.save_teacher_student_frequency(uuid, date, text, text) to authenticated;
+
+create or replace function public.update_teacher_student_frequency(
+  target_frequency_id uuid,
+  target_class_date date,
+  target_attendance_status text,
+  target_class_notes text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_teacher_admin() then
+    raise exception 'Acesso negado: usuário não cadastrado como professor.';
+  end if;
+
+  if target_attendance_status not in ('Compareceu', 'Faltou') then
+    raise exception 'Situação inválida.';
+  end if;
+
+  update public.student_frequency
+  set
+    class_date = target_class_date,
+    attendance_status = target_attendance_status,
+    class_notes = target_class_notes
+  where id = target_frequency_id;
+
+  if not found then
+    raise exception 'Registro de frequência não encontrado.';
+  end if;
+
+  return jsonb_build_object('ok', true, 'id', target_frequency_id);
+end;
+$$;
+
+grant execute on function public.update_teacher_student_frequency(uuid, date, text, text) to authenticated;
+
+create or replace function public.delete_teacher_student_frequency(target_frequency_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_teacher_admin() then
+    raise exception 'Acesso negado: usuário não cadastrado como professor.';
+  end if;
+
+  delete from public.student_frequency
+  where id = target_frequency_id;
+
+  if not found then
+    raise exception 'Registro de frequência não encontrado.';
+  end if;
+
+  return jsonb_build_object('ok', true, 'id', target_frequency_id);
+end;
+$$;
+
+grant execute on function public.delete_teacher_student_frequency(uuid) to authenticated;
