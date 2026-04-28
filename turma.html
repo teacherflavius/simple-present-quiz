@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Turma - Teacher Flávio</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase_config.js?v=20260428-2"></script>
+  <script src="auth.js?v=20260428-2"></script>
+  <link rel="stylesheet" href="professor.css?v=20260428-2">
+</head>
+<body class="auth-checking">
+  <div class="container">
+    <div class="top-links">
+      <a class="top-link" href="turmas.html">TURMAS</a>
+      <a class="top-link" href="professor.html">ÁREA DO PROFESSOR</a>
+    </div>
+
+    <div class="header">
+      <div><span class="badge">TEACHER FLÁVIO</span></div>
+      <h1 id="classTitle">Turma</h1>
+      <div id="adminStatus" class="status">Verificando credenciais de professor...</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="panel">
+      <h2>Alunos nesta turma</h2>
+      <div id="classStudentsList" class="empty">Carregando alunos da turma...</div>
+    </div>
+
+    <div class="panel">
+      <h2>Adicionar alunos matriculados</h2>
+      <div id="availableStudentsList" class="empty">Carregando alunos matriculados...</div>
+    </div>
+  </div>
+  <script src="turma.js?v=20260428-2"></script>
+  <script src="animated_cards.js?v=20260428-2"></script>
+</body>
+</html>
