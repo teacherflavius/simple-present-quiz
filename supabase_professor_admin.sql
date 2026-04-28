@@ -36,7 +36,10 @@ create policy "Professores podem visualizar perfis"
     )
   );
 
-create or replace function public.get_teacher_students()
+-- Necessário quando a estrutura de retorno da função muda, por exemplo ao adicionar pix_key.
+drop function if exists public.get_teacher_students();
+
+create function public.get_teacher_students()
 returns table (
   id text,
   user_id text,
