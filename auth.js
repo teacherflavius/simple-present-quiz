@@ -275,6 +275,58 @@
     return Object.assign({}, fallbackProfile, response.data);
   }
 
+  async function updateProfile(data) {
+    const client = getClient();
+    const user = await getUser();
+    if (!client || !user) throw new Error("Usuário não autenticado.");
+
+    const cleanCpf = normalizeCpf(data.cpf);
+    const cleanWhatsapp = normalizeWhatsapp(data.whatsapp);
+    const pixKey = normalizePixKey(data.pix_key);
+    const availability = normalizeAvailability(data.availability);
+    const availabilityColumns = availabilityToProfileColumns(availability);
+
+    if (!data.name || !cleanCpf || !cleanWhatsapp || !pixKey) {
+      throw new Error("Preencha nome, CPF, WhatsApp e chave PIX.");
+    }
+    if (cleanCpf.length !== 11) throw new Error("CPF inválido. Informe 11 dígitos.");
+    if (cleanWhatsapp.length < 10) throw new Error("WhatsApp inválido.");
+    if (countAvailabilitySlots(availability) === 0) {
+      throw new Error("Selecione pelo menos um horário disponível para aulas durante a semana.");
+    }
+
+    const currentProfile = await getProfile();
+    const profilePayload = Object.assign({
+      id: user.id,
+      name: data.name,
+      email: user.email,
+      cpf: cleanCpf,
+      whatsapp: cleanWhatsapp,
+      pix_key: pixKey,
+      availability: availability,
+      enrollment_code: currentProfile && currentProfile.enrollment_code || user.user_metadata && user.user_metadata.enrollment_code || "",
+      enrolled: currentProfile && (currentProfile.enrolled === true || currentProfile.enrolled === "true") || user.user_metadata && (user.user_metadata.enrolled === true || user.user_metadata.enrolled === "true") || false
+    }, availabilityColumns);
+
+    const profileResponse = await client.from("profiles").upsert(profilePayload).select().single();
+    if (profileResponse.error) throw profileResponse.error;
+
+    const metadataResponse = await client.auth.updateUser({
+      data: {
+        name: data.name,
+        cpf: cleanCpf,
+        whatsapp: cleanWhatsapp,
+        pix_key: pixKey,
+        availability: availability,
+        enrollment_code: profilePayload.enrollment_code,
+        enrolled: profilePayload.enrolled
+      }
+    });
+    if (metadataResponse.error) throw metadataResponse.error;
+
+    return profileResponse.data;
+  }
+
   async function saveActivityResult(result) {
     const client = getClient();
     const user = await getUser();
@@ -322,6 +374,7 @@
     signIn: signIn,
     signOut: signOut,
     getProfile: getProfile,
+    updateProfile: updateProfile,
     saveActivityResult: saveActivityResult,
     getMyResults: getMyResults
   };
