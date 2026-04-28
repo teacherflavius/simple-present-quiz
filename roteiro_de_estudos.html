@@ -5,9 +5,79 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Roteiro de Estudos - Teacher Flávio</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase_config.js?v=20260428-1"></script>
-  <script src="auth.js?v=20260428-1"></script>
-  <link rel="stylesheet" href="aula_template.css?v=20260428-1">
+  <script src="supabase_config.js?v=20260428-2"></script>
+  <script src="auth.js?v=20260428-2"></script>
+  <link rel="stylesheet" href="aula_template.css?v=20260428-2">
+  <style>
+    .lesson-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: transform 0.2s, border-color 0.2s, background 0.2s;
+      backdrop-filter: blur(12px);
+    }
+    .lesson-card.done {
+      border-color: rgba(110,231,183,0.45);
+      background: rgba(110,231,183,0.07);
+    }
+    .lesson-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(129,140,248,0.5);
+      background: rgba(129,140,248,0.07);
+    }
+    .lesson-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      color: #f1f5f9;
+      font-size: 17px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+    .lesson-title span:first-child {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .completion-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .completion-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid rgba(129,140,248,0.45);
+      background: rgba(129,140,248,0.10);
+      color: #c4b5fd;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-family: Georgia, serif;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      letter-spacing: 0.4px;
+      min-width: 150px;
+    }
+    .lesson-card.done .completion-button {
+      border-color: rgba(110,231,183,0.45);
+      background: rgba(110,231,183,0.10);
+      color: #6ee7b7;
+    }
+    .completion-button:disabled { opacity: 0.65; cursor: not-allowed; }
+    .completion-status { color: #94a3b8; font-size: 12px; text-align: right; min-width: 90px; }
+    .completion-status.saved { color: #6ee7b7; }
+    .completion-status.error { color: #fca5a5; }
+  </style>
 </head>
 <body class="auth-checking">
   <div class="container">
@@ -28,6 +98,9 @@
   </div>
 
   <script>
+    let currentUser = null;
+    let completedLessons = new Map();
+
     function redirectToLogin() {
       window.location.href = "login.html?next=" + encodeURIComponent("roteiro_de_estudos.html");
     }
@@ -42,26 +115,97 @@
       return !!(window.Auth && window.SUPABASE_CONFIG && Auth.isConfigured());
     }
 
+    function setStatus(text) {
+      document.getElementById("loginStatus").textContent = text;
+    }
+
     function renderLessons() {
       const grid = document.getElementById("lessonsGrid");
       const cards = [];
       for (let i = 1; i <= 24; i++) {
+        const lessonId = "lesson-" + i;
+        const title = "Lição " + i;
+        const isDone = completedLessons.get(lessonId) === true;
         cards.push(
-          '<a class="menu-button" href="#" aria-label="Lição ' + i + '">' +
-            '<span><span class="icon">📖</span>Lição ' + i + '</span>' +
-            '<span class="arrow">›</span>' +
-          '</a>'
+          '<div class="lesson-card ' + (isDone ? 'done' : '') + '" data-lesson-id="' + lessonId + '">' +
+            '<div class="lesson-title"><span><span class="icon">📖</span>' + title + '</span><span class="arrow">›</span></div>' +
+            '<div class="completion-row">' +
+              '<button type="button" class="completion-button" data-lesson-id="' + lessonId + '">' + (isDone ? 'MARCAR COMO NÃO FEITA' : 'MARCAR COMO FEITA') + '</button>' +
+              '<span class="completion-status ' + (isDone ? 'saved' : '') + '" id="status-' + lessonId + '">' + (isDone ? 'Feita' : 'Não feita') + '</span>' +
+            '</div>' +
+          '</div>'
         );
       }
       grid.innerHTML = cards.join("");
+
+      document.querySelectorAll(".completion-button").forEach(function (button) {
+        button.addEventListener("click", function () {
+          const lessonId = button.dataset.lessonId;
+          const nextValue = !(completedLessons.get(lessonId) === true);
+          saveLessonCompletion(lessonId, nextValue, button);
+        });
+      });
+    }
+
+    async function loadCompletedLessons() {
+      const client = Auth.getClient();
+      const response = await client
+        .from("study_roadmap_completion")
+        .select("lesson_id, completed")
+        .eq("user_id", currentUser.id);
+
+      if (response.error) throw response.error;
+      completedLessons = new Map((response.data || []).map(function (row) {
+        return [row.lesson_id, row.completed === true];
+      }));
+    }
+
+    async function saveLessonCompletion(lessonId, completed, button) {
+      const lessonNumber = Number(lessonId.replace("lesson-", ""));
+      const lessonTitle = "Lição " + lessonNumber;
+      const card = document.querySelector('[data-lesson-id="' + lessonId + '"]');
+      const status = document.getElementById("status-" + lessonId);
+      const client = Auth.getClient();
+
+      button.disabled = true;
+      button.textContent = "SALVANDO...";
+      status.className = "completion-status";
+      status.textContent = "Salvando...";
+
+      try {
+        const response = await client
+          .from("study_roadmap_completion")
+          .upsert({
+            user_id: currentUser.id,
+            lesson_id: lessonId,
+            lesson_number: lessonNumber,
+            lesson_title: lessonTitle,
+            completed: completed,
+            completed_at: completed ? new Date().toISOString() : null,
+            updated_at: new Date().toISOString()
+          }, { onConflict: "user_id,lesson_id" });
+
+        if (response.error) throw response.error;
+
+        completedLessons.set(lessonId, completed);
+        if (card) card.classList.toggle("done", completed);
+        button.textContent = completed ? "MARCAR COMO NÃO FEITA" : "MARCAR COMO FEITA";
+        status.className = "completion-status saved";
+        status.textContent = completed ? "Feita" : "Não feita";
+      } catch (error) {
+        status.className = "completion-status error";
+        status.textContent = "Erro ao salvar";
+        button.textContent = completed ? "MARCAR COMO FEITA" : "MARCAR COMO NÃO FEITA";
+      } finally {
+        button.disabled = false;
+      }
     }
 
     async function guardPage() {
-      const status = document.getElementById("loginStatus");
       const resourcesReady = await waitForAuthResources();
 
       if (!resourcesReady) {
-        status.textContent = "Não foi possível carregar a autenticação. Atualize a página ou limpe o cache do navegador.";
+        setStatus("Não foi possível carregar a autenticação. Atualize a página ou limpe o cache do navegador.");
         document.body.classList.remove("auth-checking");
         renderLessons();
         return;
@@ -73,13 +217,21 @@
         return;
       }
 
-      status.textContent = "Aluno conectado: " + session.user.email + ".";
+      currentUser = session.user;
+
+      try {
+        await loadCompletedLessons();
+        setStatus("Aluno conectado: " + currentUser.email + ". Clique em uma lição para marcar ou desmarcar como feita.");
+      } catch (error) {
+        setStatus("Não foi possível carregar seus registros. Execute supabase_roteiro_de_estudos.sql no Supabase.");
+      }
+
       document.body.classList.remove("auth-checking");
       renderLessons();
     }
 
     guardPage();
   </script>
-  <script src="animated_cards.js?v=20260428-1"></script>
+  <script src="animated_cards.js?v=20260428-2"></script>
 </body>
 </html>
