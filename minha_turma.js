@@ -43,7 +43,20 @@ async function loadMyClass() {
   return response.data || [];
 }
 
+function renderResourceLink(url, label) {
+  if (!url) return '';
+  return '<a class="menu-button" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer" style="margin-top:10px;">' +
+    '<span><span class="icon">🔗</span>' + escapeHtml(label) + '</span><span class="arrow">›</span>' +
+  '</a>';
+}
+
 function renderClassCard(row) {
+  const links = [
+    renderResourceLink(row.video_lesson_url, "VIDEOAULA"),
+    renderResourceLink(row.lesson_material_url, "MATERIAL DA AULA"),
+    renderResourceLink(row.whatsapp_group_url, "GRUPO DE WHATSAPP")
+  ].join("");
+
   return '<div class="class-card">' +
     '<h2>Turma ' + escapeHtml(row.class_number || "") + '</h2>' +
     '<p><b>Número da turma:</b> ' + escapeHtml(row.class_number || "Não informado") + '</p>' +
@@ -51,6 +64,10 @@ function renderClassCard(row) {
     '<p><b>E-mail:</b> ' + escapeHtml(row.student_email || "Não informado") + '</p>' +
     '<p><b>Número de matrícula:</b> ' + escapeHtml(row.enrollment_code || "Não informado") + '</p>' +
     '<p><b>Inscrito na turma em:</b> ' + escapeHtml(formatDateTime(row.created_at)) + '</p>' +
+    '<div style="margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.08);">' +
+      '<p><b>Links da turma:</b></p>' +
+      (links || '<p>Nenhum link foi cadastrado pelo professor ainda.</p>') +
+    '</div>' +
   '</div>';
 }
 
