@@ -51,6 +51,12 @@ create policy "Professores podem visualizar alunos das turmas"
   for select
   using (public.is_teacher_admin());
 
+drop policy if exists "Alunos podem visualizar sua própria turma" on public.class_students;
+create policy "Alunos podem visualizar sua própria turma"
+  on public.class_students
+  for select
+  using (auth.uid() = user_id);
+
 create or replace function public.get_teacher_class_students(target_class_number integer)
 returns table (
   id text,
@@ -92,6 +98,40 @@ end;
 $$;
 
 grant execute on function public.get_teacher_class_students(integer) to authenticated;
+
+create or replace function public.get_my_student_class()
+returns table (
+  id text,
+  class_number integer,
+  user_id text,
+  student_name text,
+  student_email text,
+  enrollment_code text,
+  created_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+begin
+  return query
+  select
+    cs.id::text,
+    cs.class_number,
+    cs.user_id::text,
+    coalesce(p.name, u.raw_user_meta_data ->> 'name', u.email, 'Aluno sem nome')::text as student_name,
+    coalesce(p.email, u.email, '')::text as student_email,
+    coalesce(p.enrollment_code, u.raw_user_meta_data ->> 'enrollment_code', '')::text as enrollment_code,
+    cs.created_at
+  from public.class_students cs
+  left join public.profiles p on p.id = cs.user_id
+  left join auth.users u on u.id = cs.user_id
+  where cs.user_id = auth.uid()
+  order by cs.created_at desc;
+end;
+$$;
+
+grant execute on function public.get_my_student_class() to authenticated;
 
 create or replace function public.add_teacher_class_student(
   target_class_number integer,
