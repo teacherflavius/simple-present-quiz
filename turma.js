@@ -56,6 +56,15 @@ function parseBrazilianShortDate(value) {
   return String(year) + "-" + String(month).padStart(2, "0") + "-" + String(day).padStart(2, "0");
 }
 
+function formatBrazilianDate(value) {
+  if (!value) return "Data não informada";
+  const parts = String(value).split("-");
+  if (parts.length === 3) return parts[2] + "/" + parts[1] + "/" + parts[0].slice(2);
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit" });
+}
+
 function isEnrolled(student) {
   return student.enrolled === true || student.enrolled === "true" || !!student.enrollment_code;
 }
@@ -85,6 +94,73 @@ async function loadClassResources() {
   const response = await client.rpc("get_teacher_class_resources", { target_class_number: currentClassNumber });
   if (response.error) throw response.error;
   return response.data && response.data.length ? response.data[0] : null;
+}
+
+async function loadClassHistory() {
+  const client = Auth.getClient();
+  const response = await client.rpc("get_teacher_class_activity_history", { target_class_number: currentClassNumber });
+  if (response.error) throw response.error;
+  return response.data || [];
+}
+
+function cleanClassNotes(notes) {
+  return String(notes || "").replace(/^\[Turma\s+\d+\]\s*/i, "").trim();
+}
+
+function groupHistoryByClassDate(records) {
+  return records.reduce(function (groups, record) {
+    const dateKey = record.class_date || "sem-data";
+    const notesKey = cleanClassNotes(record.class_notes || "");
+    const key = dateKey + "||" + notesKey;
+    if (!groups[key]) {
+      groups[key] = {
+        classDate: record.class_date,
+        notes: notesKey,
+        records: []
+      };
+    }
+    groups[key].records.push(record);
+    return groups;
+  }, {});
+}
+
+function renderHistoryCard(group) {
+  const studentsHtml = group.records.map(function (record) {
+    return '<p><b>' + escapeHtml(record.student_name || "Aluno sem nome") + ':</b> ' +
+      escapeHtml(record.attendance_status || "Sem status") +
+      (record.student_email ? ' — ' + escapeHtml(record.student_email) : '') +
+    '</p>';
+  }).join("");
+
+  return '<div class="history-card">' +
+    '<strong>Aula de ' + escapeHtml(formatBrazilianDate(group.classDate)) + '</strong>' +
+    '<p><b>Atividade registrada:</b> ' + escapeHtml(group.notes || "Sem descrição registrada") + '</p>' +
+    '<p><b>Total de registros:</b> ' + group.records.length + '</p>' +
+    '<div class="student-list">' + studentsHtml + '</div>' +
+  '</div>';
+}
+
+async function renderClassHistory() {
+  const list = document.getElementById("classHistoryList");
+  if (!list) return;
+
+  try {
+    const records = await loadClassHistory();
+    if (!records.length) {
+      list.className = "empty";
+      list.textContent = "Nenhuma aula foi registrada para os alunos desta turma ainda.";
+      return;
+    }
+
+    const groups = groupHistoryByClassDate(records);
+    list.className = "";
+    list.innerHTML = Object.keys(groups).map(function (key) {
+      return renderHistoryCard(groups[key]);
+    }).join("");
+  } catch (error) {
+    list.className = "error";
+    list.textContent = "Não foi possível carregar o histórico da turma. Reexecute supabase_turmas.sql no Supabase.";
+  }
 }
 
 async function renderClassResources() {
@@ -267,6 +343,7 @@ async function refreshLists() {
   const classRows = await loadClassStudents();
   classStudentIds = new Set(classRows.map(function (row) { return row.user_id; }));
   renderLists();
+  await renderClassHistory();
 }
 
 async function saveClassAttendance(event) {
@@ -307,6 +384,7 @@ async function saveClassAttendance(event) {
 
     document.getElementById("classAttendanceForm").reset();
     renderAttendanceStudents();
+    await renderClassHistory();
     message.className = "empty";
     message.textContent = "Frequência da aula salva.";
   } catch (error) {
