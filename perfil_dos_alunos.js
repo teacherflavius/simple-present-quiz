@@ -67,11 +67,39 @@ async function loadStudents() {
   return response.data || [];
 }
 
+async function deleteStudent(userId, studentName, button) {
+  const confirmed = window.confirm("Excluir definitivamente o aluno " + studentName + "? Esta ação remove a conta de login, o perfil, frequência e registros de exercícios vinculados a esse aluno.");
+  if (!confirmed) return;
+
+  button.disabled = true;
+  button.textContent = "EXCLUINDO...";
+
+  try {
+    const client = Auth.getClient();
+    const response = await client.rpc("delete_teacher_student", { target_user_id: userId });
+    if (response.error) throw response.error;
+    await renderStudentProfiles();
+  } catch (error) {
+    alert("Não foi possível excluir o aluno: " + (error.message || "erro desconhecido") + ". Reexecute o arquivo supabase_professor_admin.sql no Supabase.");
+    button.disabled = false;
+    button.textContent = "EXCLUIR ALUNO";
+  }
+}
+
+function attachDeleteButtons() {
+  document.querySelectorAll(".delete-student-button").forEach(function (button) {
+    button.addEventListener("click", function () {
+      deleteStudent(button.dataset.userId, button.dataset.studentName || "este aluno", button);
+    });
+  });
+}
+
 function renderProfileCard(student) {
   const enrolled = isEnrolled(student);
   const userId = student.user_id || student.id || "";
+  const studentName = student.name || student.email || "Aluno sem nome";
   return '<div class="student-card">' +
-    '<strong>' + escapeHtml(student.name || "Aluno sem nome") +
+    '<strong>' + escapeHtml(studentName) +
       '<span class="pill ' + (enrolled ? '' : 'pending') + '">' + (enrolled ? 'Matriculado' : 'Cadastro sem matrícula confirmada') + '</span>' +
     '</strong>' +
     '<p><b>Número de matrícula:</b> ' + escapeHtml(student.enrollment_code || "Não informado") + '</p>' +
@@ -86,7 +114,10 @@ function renderProfileCard(student) {
     '<div style="margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">' +
       '<p><b>Disponibilidade para aulas:</b></p>' + formatAvailability(student) +
     '</div>' +
-    '<a class="delete-button" href="editar_aluno.html?id=' + encodeURIComponent(userId) + '" style="display:inline-flex; justify-content:center; text-decoration:none; margin-top:14px; border-color:rgba(129,140,248,0.45); background:rgba(129,140,248,0.10); color:#c4b5fd;">EDITAR DADOS</a>' +
+    '<div style="display:grid; grid-template-columns:1fr; gap:10px; margin-top:14px;">' +
+      '<a class="delete-button" href="editar_aluno.html?id=' + encodeURIComponent(userId) + '" style="display:inline-flex; justify-content:center; text-decoration:none; border-color:rgba(129,140,248,0.45); background:rgba(129,140,248,0.10); color:#c4b5fd;">EDITAR DADOS</a>' +
+      '<button class="delete-button delete-student-button" type="button" data-user-id="' + escapeHtml(userId) + '" data-student-name="' + escapeHtml(studentName) + '" style="border-color:rgba(248,113,113,0.55); background:rgba(248,113,113,0.10); color:#fca5a5;">EXCLUIR ALUNO</button>' +
+    '</div>' +
   '</div>';
 }
 
@@ -102,6 +133,7 @@ async function renderStudentProfiles() {
     }
     list.className = "";
     list.innerHTML = enrolledStudents.map(renderProfileCard).join("");
+    attachDeleteButtons();
   } catch (error) {
     list.className = "error";
     list.textContent = "Não foi possível carregar os perfis dos alunos: " + (error.message || "erro desconhecido") + ". Reexecute o arquivo supabase_professor_admin.sql no Supabase.";
