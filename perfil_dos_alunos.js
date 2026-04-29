@@ -1,5 +1,6 @@
 let currentProfessorSession = null;
 let teacherClasses = [];
+let studentClassMap = new Map();
 let selectedStudentForClass = null;
 
 function redirectToLogin() {
@@ -62,6 +63,11 @@ function formatCreatedAt(value) {
   return date.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 
+function getStudentClassNames(userId) {
+  const classes = studentClassMap.get(String(userId)) || [];
+  return classes.length ? classes.join(", ") : "Nenhuma turma atribuída";
+}
+
 async function loadStudents() {
   const client = Auth.getClient();
   const response = await client.rpc("get_teacher_students");
@@ -77,6 +83,27 @@ async function loadTeacherClasses() {
   return teacherClasses;
 }
 
+async function loadStudentClassMap() {
+  const client = Auth.getClient();
+  const map = new Map();
+
+  for (const classItem of teacherClasses) {
+    const response = await client.rpc("get_teacher_class_students", { target_class_number: Number(classItem.class_number) });
+    if (response.error) throw response.error;
+
+    (response.data || []).forEach(function (row) {
+      const userId = String(row.user_id);
+      const className = classItem.class_name || ("Turma " + classItem.class_number);
+      const current = map.get(userId) || [];
+      if (!current.includes(className)) current.push(className);
+      map.set(userId, current);
+    });
+  }
+
+  studentClassMap = map;
+  return studentClassMap;
+}
+
 async function deleteStudent(userId, studentName, button) {
   const confirmed = window.confirm("Excluir definitivamente o aluno " + studentName + "? Esta ação remove a conta de login, o perfil, frequência e registros de exercícios vinculados a esse aluno.");
   if (!confirmed) return;
@@ -88,6 +115,7 @@ async function deleteStudent(userId, studentName, button) {
     const client = Auth.getClient();
     const response = await client.rpc("delete_teacher_student", { target_user_id: userId });
     if (response.error) throw response.error;
+    await loadStudentClassMap();
     await renderStudentProfiles();
   } catch (error) {
     alert("Não foi possível excluir o aluno: " + (error.message || "erro desconhecido") + ". Reexecute o arquivo supabase_professor_admin.sql no Supabase.");
@@ -159,8 +187,10 @@ async function saveClassAssignment() {
       target_user_id: selectedStudentForClass.userId
     });
     if (response.error) throw response.error;
+
+    await loadStudentClassMap();
+    await renderStudentProfiles();
     closeClassAssignmentModal();
-    alert("Turma atribuída ao aluno.");
   } catch (error) {
     message.className = "error";
     message.textContent = "Não foi possível atribuir a turma: " + (error.message || "erro desconhecido") + ". Reexecute supabase_turmas.sql no Supabase.";
@@ -179,7 +209,7 @@ function attachActionButtons() {
 
   document.querySelectorAll(".assign-class-button").forEach(function (button) {
     button.addEventListener("click", function () {
-      openClassAssignmentModal(button.dataset.userId, button.dataset.studentName || "Aluno");
+      openClassAssignmentModal(button.dataset.userId, button.datasetStudentName || button.dataset.studentName || "Aluno");
     });
   });
 }
@@ -188,10 +218,13 @@ function renderProfileCard(student) {
   const enrolled = isEnrolled(student);
   const userId = student.user_id || student.id || "";
   const studentName = student.name || student.email || "Aluno sem nome";
+  const assignedClasses = getStudentClassNames(userId);
+
   return '<div class="student-card">' +
     '<strong>' + escapeHtml(studentName) +
       '<span class="pill ' + (enrolled ? '' : 'pending') + '">' + (enrolled ? 'Matriculado' : 'Cadastro sem matrícula confirmada') + '</span>' +
     '</strong>' +
+    '<p><b>Turma:</b> ' + escapeHtml(assignedClasses) + '</p>' +
     '<p><b>Número de matrícula:</b> ' + escapeHtml(student.enrollment_code || "Não informado") + '</p>' +
     '<p><b>Nome completo:</b> ' + escapeHtml(student.name || "Não informado") + '</p>' +
     '<p><b>E-mail:</b> ' + escapeHtml(student.email || "Não informado") + '</p>' +
@@ -264,6 +297,7 @@ async function guardPage() {
   document.body.classList.remove("auth-checking");
   setupModalEvents();
   await loadTeacherClasses();
+  await loadStudentClassMap();
   await renderStudentProfiles();
 }
 
