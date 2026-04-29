@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Matrícula - Teacher Flávio</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase_config.js"></script>
-  <script src="auth.js"></script>
+  <script src="supabase_config.js?v=20260429-9"></script>
+  <script src="auth.js?v=20260429-9"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { min-height: 100vh; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); display: flex; align-items: center; justify-content: center; padding: 32px 16px; font-family: Georgia, serif; color: #f1f5f9; }
@@ -37,7 +37,7 @@
     .secondary { background: rgba(255,255,255,0.05) !important; border: 1.5px solid rgba(129,140,248,0.35) !important; color: #cbd5e1 !important; }
     .whatsapp-btn { background: linear-gradient(90deg,#22c55e,#16a34a) !important; color: #fff !important; border: none !important; margin-top: 14px !important; }
     .error { min-height: 20px; color: #fca5a5; font-size: 13px; margin: 8px 0; line-height: 1.5; }
-    .success { color: #6ee7b7; font-size: 13px; line-height: 1.5; margin: 8px 0; }
+    .success { min-height: 0; color: transparent; font-size: 0; line-height: 0; margin: 0; }
     .code-box { display: none; text-align: center; background: rgba(110,231,183,0.08); border: 1px solid rgba(110,231,183,0.35); border-radius: 16px; padding: 18px; margin: 16px 0; }
     .code-box strong { display: block; color: #6ee7b7; font-size: 34px; font-family: monospace; letter-spacing: 4px; margin-top: 8px; }
     .notify-message { color: #f1f5f9; font-size: 15px; line-height: 1.5; margin: 14px 0 0; font-weight: bold; }
@@ -197,7 +197,7 @@
 
         codeBox.style.display = "block";
         message.className = "success";
-        message.textContent = "FOI ENVIADO UMA MENSAGEM DE CONFIRMAÇÃO PARA O EMAIL CADASTRADO NA SUA MATRICULA. PARA ACESSAR O SITE VÁ ATÉ SUA CAIXA DE EMAIL E VERIFIQUE.";
+        message.textContent = "";
         document.getElementById("enrollmentForm").reset();
         document.querySelectorAll('input[name="availability"]').forEach(input => input.checked = false);
         document.getElementById("password").type = "password";
