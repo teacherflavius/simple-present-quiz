@@ -1,4 +1,6 @@
 let currentProfessorSession = null;
+let teacherClasses = [];
+let selectedStudentForClass = null;
 
 function redirectToLogin() {
   window.location.href = "login.html?next=" + encodeURIComponent("perfil_dos_alunos.html");
@@ -67,6 +69,14 @@ async function loadStudents() {
   return response.data || [];
 }
 
+async function loadTeacherClasses() {
+  const client = Auth.getClient();
+  const response = await client.rpc("get_teacher_classes");
+  if (response.error) throw response.error;
+  teacherClasses = response.data || [];
+  return teacherClasses;
+}
+
 async function deleteStudent(userId, studentName, button) {
   const confirmed = window.confirm("Excluir definitivamente o aluno " + studentName + "? Esta ação remove a conta de login, o perfil, frequência e registros de exercícios vinculados a esse aluno.");
   if (!confirmed) return;
@@ -86,10 +96,90 @@ async function deleteStudent(userId, studentName, button) {
   }
 }
 
-function attachDeleteButtons() {
+function openClassAssignmentModal(userId, studentName) {
+  selectedStudentForClass = { userId: userId, studentName: studentName };
+  const modal = document.getElementById("classAssignmentModal");
+  const nameLabel = document.getElementById("classAssignmentStudentName");
+  const message = document.getElementById("classAssignmentMessage");
+  const select = document.getElementById("classAssignmentSelect");
+
+  if (nameLabel) nameLabel.textContent = "Aluno: " + studentName;
+  if (message) {
+    message.className = "empty";
+    message.textContent = "";
+  }
+
+  if (select) {
+    if (!teacherClasses.length) {
+      select.innerHTML = '<option value="">Nenhuma turma criada</option>';
+    } else {
+      select.innerHTML = '<option value="">Selecione uma turma</option>' + teacherClasses.map(function (item) {
+        return '<option value="' + escapeHtml(item.class_number) + '">' + escapeHtml(item.class_name || ("Turma " + item.class_number)) + '</option>';
+      }).join("");
+    }
+  }
+
+  if (modal) {
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+  }
+}
+
+function closeClassAssignmentModal() {
+  const modal = document.getElementById("classAssignmentModal");
+  selectedStudentForClass = null;
+  if (modal) {
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+  }
+}
+
+async function saveClassAssignment() {
+  const message = document.getElementById("classAssignmentMessage");
+  const select = document.getElementById("classAssignmentSelect");
+  const button = document.getElementById("saveClassAssignmentButton");
+
+  if (!selectedStudentForClass) return;
+  const classNumber = select ? Number(select.value) : null;
+  if (!classNumber) {
+    message.className = "error";
+    message.textContent = "Selecione uma turma.";
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "SALVANDO...";
+  message.className = "empty";
+  message.textContent = "Atribuindo turma ao aluno...";
+
+  try {
+    const client = Auth.getClient();
+    const response = await client.rpc("add_teacher_class_student", {
+      target_class_number: classNumber,
+      target_user_id: selectedStudentForClass.userId
+    });
+    if (response.error) throw response.error;
+    closeClassAssignmentModal();
+    alert("Turma atribuída ao aluno.");
+  } catch (error) {
+    message.className = "error";
+    message.textContent = "Não foi possível atribuir a turma: " + (error.message || "erro desconhecido") + ". Reexecute supabase_turmas.sql no Supabase.";
+  } finally {
+    button.disabled = false;
+    button.textContent = "SALVAR TURMA";
+  }
+}
+
+function attachActionButtons() {
   document.querySelectorAll(".delete-student-button").forEach(function (button) {
     button.addEventListener("click", function () {
       deleteStudent(button.dataset.userId, button.dataset.studentName || "este aluno", button);
+    });
+  });
+
+  document.querySelectorAll(".assign-class-button").forEach(function (button) {
+    button.addEventListener("click", function () {
+      openClassAssignmentModal(button.dataset.userId, button.dataset.studentName || "Aluno");
     });
   });
 }
@@ -114,7 +204,8 @@ function renderProfileCard(student) {
     '<div style="margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">' +
       '<p><b>Disponibilidade para aulas:</b></p>' + formatAvailability(student) +
     '</div>' +
-    '<div style="display:grid; grid-template-columns:1fr; gap:10px; margin-top:14px;">' +
+    '<div class="student-actions">' +
+      '<button class="delete-button assign-class-button" type="button" data-user-id="' + escapeHtml(userId) + '" data-student-name="' + escapeHtml(studentName) + '" style="border-color:rgba(129,140,248,0.45); background:rgba(129,140,248,0.10); color:#c4b5fd;">TURMA</button>' +
       '<a class="delete-button" href="editar_aluno.html?id=' + encodeURIComponent(userId) + '" style="display:inline-flex; justify-content:center; text-decoration:none; border-color:rgba(129,140,248,0.45); background:rgba(129,140,248,0.10); color:#c4b5fd;">EDITAR DADOS</a>' +
       '<button class="delete-button delete-student-button" type="button" data-user-id="' + escapeHtml(userId) + '" data-student-name="' + escapeHtml(studentName) + '" style="border-color:rgba(248,113,113,0.55); background:rgba(248,113,113,0.10); color:#fca5a5;">EXCLUIR ALUNO</button>' +
     '</div>' +
@@ -133,10 +224,26 @@ async function renderStudentProfiles() {
     }
     list.className = "";
     list.innerHTML = enrolledStudents.map(renderProfileCard).join("");
-    attachDeleteButtons();
+    attachActionButtons();
   } catch (error) {
     list.className = "error";
     list.textContent = "Não foi possível carregar os perfis dos alunos: " + (error.message || "erro desconhecido") + ". Reexecute o arquivo supabase_professor_admin.sql no Supabase.";
+  }
+}
+
+function setupModalEvents() {
+  const closeButton = document.getElementById("closeClassAssignmentModalButton");
+  const cancelButton = document.getElementById("cancelClassAssignmentButton");
+  const saveButton = document.getElementById("saveClassAssignmentButton");
+  const modal = document.getElementById("classAssignmentModal");
+
+  if (closeButton) closeButton.addEventListener("click", closeClassAssignmentModal);
+  if (cancelButton) cancelButton.addEventListener("click", closeClassAssignmentModal);
+  if (saveButton) saveButton.addEventListener("click", saveClassAssignment);
+  if (modal) {
+    modal.addEventListener("click", function (event) {
+      if (event.target === modal) closeClassAssignmentModal();
+    });
   }
 }
 
@@ -155,6 +262,8 @@ async function guardPage() {
   }
   status.textContent = "Professor autenticado: " + currentProfessorSession.user.email + ".";
   document.body.classList.remove("auth-checking");
+  setupModalEvents();
+  await loadTeacherClasses();
   await renderStudentProfiles();
 }
 
