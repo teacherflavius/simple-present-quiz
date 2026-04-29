@@ -5,15 +5,57 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Perfil dos Alunos - Teacher Flávio</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase_config.js?v=20260429-7"></script>
-  <script src="auth.js?v=20260429-7"></script>
-  <link rel="stylesheet" href="professor.css?v=20260429-7">
+  <script src="supabase_config.js?v=20260429-8"></script>
+  <script src="auth.js?v=20260429-8"></script>
+  <link rel="stylesheet" href="professor.css?v=20260429-8">
   <style>
     .student-actions {
       display: grid;
       grid-template-columns: 1fr;
       gap: 10px;
       margin-top: 14px;
+    }
+
+    .student-count-panel {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(129,140,248,0.28);
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      backdrop-filter: blur(12px);
+    }
+
+    .student-count-panel h2 {
+      color: #f1f5f9;
+      font-size: 18px;
+      margin: 0 0 6px;
+    }
+
+    .student-count-panel p {
+      color: #94a3b8;
+      font-size: 13px;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .student-count-number {
+      min-width: 86px;
+      height: 86px;
+      border-radius: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(129,140,248,0.32), rgba(167,139,250,0.18));
+      border: 1px solid rgba(196,181,253,0.35);
+      color: #f1f5f9;
+      font-size: 38px;
+      font-weight: bold;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+      flex-shrink: 0;
     }
 
     .modal-backdrop {
@@ -131,6 +173,16 @@
         grid-template-columns: 1fr 1fr;
       }
     }
+
+    @media (max-width: 540px) {
+      .student-count-panel {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .student-count-number {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body class="auth-checking">
@@ -147,6 +199,14 @@
     </div>
 
     <div class="divider"></div>
+
+    <div class="student-count-panel">
+      <div>
+        <h2>Total de alunos matriculados</h2>
+        <p>Contagem atual de alunos com matrícula ativa no curso.</p>
+      </div>
+      <div id="studentCountNumber" class="student-count-number">0</div>
+    </div>
 
     <div class="panel">
       <h2>Perfis completos</h2>
@@ -178,7 +238,7 @@
     </div>
   </div>
 
-  <script src="perfil_dos_alunos.js?v=20260429-7"></script>
-  <script src="animated_cards.js?v=20260429-7"></script>
+  <script src="perfil_dos_alunos.js?v=20260429-8"></script>
+  <script src="animated_cards.js?v=20260429-8"></script>
 </body>
 </html>
