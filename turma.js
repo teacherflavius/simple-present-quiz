@@ -2,6 +2,7 @@ let currentProfessorSession = null;
 let currentClassNumber = null;
 let allStudents = [];
 let classStudentIds = new Set();
+let modalSearchTerm = "";
 
 function getClassNumber() {
   const params = new URLSearchParams(window.location.search);
@@ -79,6 +80,12 @@ function getClassStudents() {
   });
 }
 
+function getAvailableStudents() {
+  return allStudents.filter(function (student) {
+    return !classStudentIds.has(getStudentId(student));
+  });
+}
+
 async function loadStudents() {
   const client = Auth.getClient();
   const response = await client.rpc("get_teacher_students");
@@ -117,11 +124,7 @@ function groupHistoryByClassDate(records) {
     const notesKey = cleanClassNotes(record.class_notes || "");
     const key = dateKey + "||" + notesKey;
     if (!groups[key]) {
-      groups[key] = {
-        classDate: record.class_date,
-        notes: notesKey,
-        records: []
-      };
+      groups[key] = { classDate: record.class_date, notes: notesKey, records: [] };
     }
     groups[key].records.push(record);
     return groups;
@@ -158,9 +161,7 @@ async function renderClassHistory() {
 
     const groups = groupHistoryByClassDate(records);
     list.className = "";
-    list.innerHTML = Object.keys(groups).map(function (key) {
-      return renderHistoryCard(groups[key]);
-    }).join("");
+    list.innerHTML = Object.keys(groups).map(function (key) { return renderHistoryCard(groups[key]); }).join("");
   } catch (error) {
     list.className = "error";
     list.textContent = "Não foi possível carregar o histórico da turma. Reexecute supabase_turmas.sql no Supabase.";
@@ -210,8 +211,10 @@ async function saveClassResources(event) {
 }
 
 async function addStudentToClass(userId, button) {
-  button.disabled = true;
-  button.textContent = "ADICIONANDO...";
+  if (button) {
+    button.disabled = true;
+    button.textContent = "ADICIONANDO...";
+  }
 
   try {
     const client = Auth.getClient();
@@ -223,8 +226,49 @@ async function addStudentToClass(userId, button) {
     await refreshLists();
   } catch (error) {
     alert("Não foi possível adicionar o aluno: " + (error.message || "erro desconhecido") + ". Execute supabase_turmas.sql no Supabase.");
+    if (button) {
+      button.disabled = false;
+      button.textContent = "ADICIONAR À TURMA";
+    }
+  }
+}
+
+async function addSelectedStudentsToClass() {
+  const button = document.getElementById("addSelectedStudentsButton");
+  const message = document.getElementById("modalStudentsMessage");
+  const selectedIds = Array.from(document.querySelectorAll(".modal-student-checkbox:checked")).map(function (checkbox) {
+    return checkbox.value;
+  });
+
+  if (!selectedIds.length) {
+    message.className = "error";
+    message.textContent = "Selecione pelo menos um aluno.";
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "ADICIONANDO...";
+  message.className = "empty";
+  message.textContent = "Adicionando alunos selecionados...";
+
+  try {
+    const client = Auth.getClient();
+    for (const userId of selectedIds) {
+      const response = await client.rpc("add_teacher_class_student", {
+        target_class_number: currentClassNumber,
+        target_user_id: userId
+      });
+      if (response.error) throw response.error;
+    }
+
+    await refreshLists();
+    closeStudentsModal();
+  } catch (error) {
+    message.className = "error";
+    message.textContent = "Não foi possível adicionar os alunos: " + (error.message || "erro desconhecido") + ". Execute supabase_turmas.sql no Supabase.";
+  } finally {
     button.disabled = false;
-    button.textContent = "ADICIONAR À TURMA";
+    button.textContent = "ADICIONAR ALUNOS SELECIONADOS";
   }
 }
 
@@ -258,7 +302,7 @@ function renderStudentCard(student, action) {
 
   const button = action === "remove"
     ? '<button class="delete-button remove-class-student" data-user-id="' + userId + '">REMOVER DA TURMA</button>'
-    : '<button class="delete-button add-class-student" data-user-id="' + userId + '" style="border-color:rgba(129,140,248,0.45); background:rgba(129,140,248,0.10); color:#c4b5fd;">ADICIONAR À TURMA</button>';
+    : '';
 
   return '<div class="student-card">' +
     '<strong>' + name + '</strong>' +
@@ -266,6 +310,67 @@ function renderStudentCard(student, action) {
     '<p><b>Número de matrícula:</b> ' + enrollmentCode + '</p>' +
     button +
   '</div>';
+}
+
+function renderModalStudentOption(student) {
+  const userId = escapeHtml(getStudentId(student));
+  const name = escapeHtml(student.name || student.email || "Aluno sem nome");
+  const email = escapeHtml(student.email || "Não informado");
+  const enrollmentCode = escapeHtml(student.enrollment_code || "Não informado");
+  return '<label class="modal-student-option">' +
+    '<input class="modal-student-checkbox" type="checkbox" value="' + userId + '" />' +
+    '<span><strong>' + name + '</strong><span>' + email + '</span><span>Matrícula: ' + enrollmentCode + '</span></span>' +
+  '</label>';
+}
+
+function studentMatchesSearch(student, term) {
+  if (!term) return true;
+  const haystack = [student.name, student.email, student.enrollment_code, student.cpf, student.whatsapp]
+    .map(function (value) { return String(value || "").toLowerCase(); })
+    .join(" ");
+  return haystack.includes(term.toLowerCase());
+}
+
+function renderAvailableStudentsModal() {
+  const list = document.getElementById("availableStudentsList");
+  const message = document.getElementById("modalStudentsMessage");
+  if (!list) return;
+
+  const availableStudents = getAvailableStudents().filter(function (student) {
+    return studentMatchesSearch(student, modalSearchTerm);
+  });
+
+  if (!availableStudents.length) {
+    list.className = "empty";
+    list.textContent = getAvailableStudents().length ? "Nenhum aluno encontrado para essa busca." : "Não há alunos disponíveis para adicionar a esta turma.";
+    if (message) message.textContent = "";
+    return;
+  }
+
+  list.className = "modal-student-list";
+  list.innerHTML = availableStudents.map(renderModalStudentOption).join("");
+  if (message) {
+    message.className = "empty";
+    message.textContent = availableStudents.length + " aluno(s) disponível(is).";
+  }
+}
+
+function openStudentsModal() {
+  const modal = document.getElementById("studentsModal");
+  const search = document.getElementById("studentModalSearch");
+  if (!modal) return;
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+  modalSearchTerm = "";
+  if (search) search.value = "";
+  renderAvailableStudentsModal();
+}
+
+function closeStudentsModal() {
+  const modal = document.getElementById("studentsModal");
+  if (!modal) return;
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden", "true");
 }
 
 function renderAttendanceStudents() {
@@ -297,49 +402,25 @@ function renderAttendanceStudents() {
 }
 
 function attachClassButtons() {
-  document.querySelectorAll(".add-class-student").forEach(function (button) {
-    button.addEventListener("click", function () {
-      addStudentToClass(button.dataset.userId, button);
-    });
-  });
-
   document.querySelectorAll(".remove-class-student").forEach(function (button) {
-    button.addEventListener("click", function () {
-      removeStudentFromClass(button.dataset.userId, button);
-    });
+    button.addEventListener("click", function () { removeStudentFromClass(button.dataset.userId, button); });
   });
 }
 
 function renderLists() {
   const classList = document.getElementById("classStudentsList");
-  const availableList = document.getElementById("availableStudentsList");
-
   const classStudents = getClassStudents();
-  const availableStudents = allStudents.filter(function (student) {
-    return !classStudentIds.has(getStudentId(student));
-  });
 
   if (!classStudents.length) {
     classList.className = "empty";
     classList.textContent = "Nenhum aluno adicionado a esta turma ainda.";
   } else {
     classList.className = "";
-    classList.innerHTML = classStudents.map(function (student) {
-      return renderStudentCard(student, "remove");
-    }).join("");
-  }
-
-  if (!availableStudents.length) {
-    availableList.className = "empty";
-    availableList.textContent = allStudents.length ? "Todos os alunos matriculados já estão nesta turma." : "Nenhum aluno matriculado foi encontrado. Verifique se há alunos cadastrados em Alunos Matriculados.";
-  } else {
-    availableList.className = "";
-    availableList.innerHTML = availableStudents.map(function (student) {
-      return renderStudentCard(student, "add");
-    }).join("");
+    classList.innerHTML = classStudents.map(function (student) { return renderStudentCard(student, "remove"); }).join("");
   }
 
   renderAttendanceStudents();
+  renderAvailableStudentsModal();
   attachClassButtons();
 }
 
@@ -361,9 +442,7 @@ async function saveClassAttendance(event) {
     const generalNotes = document.getElementById("classNotes").value.trim();
     const selectedChecks = Array.from(document.querySelectorAll(".attendance-student-check:checked"));
 
-    if (!selectedChecks.length) {
-      throw new Error("Selecione pelo menos um aluno para registrar a aula.");
-    }
+    if (!selectedChecks.length) throw new Error("Selecione pelo menos um aluno para registrar a aula.");
 
     const attendanceRecords = selectedChecks.map(function (checkbox) {
       const userId = checkbox.dataset.userId;
@@ -437,9 +516,7 @@ async function guardPage() {
 
 const classDateInput = document.getElementById("classDate");
 if (classDateInput) {
-  classDateInput.addEventListener("input", function () {
-    this.value = formatDateInput(this.value);
-  });
+  classDateInput.addEventListener("input", function () { this.value = formatDateInput(this.value); });
 }
 
 const classResourcesForm = document.getElementById("classResourcesForm");
@@ -447,5 +524,32 @@ if (classResourcesForm) classResourcesForm.addEventListener("submit", saveClassR
 
 const classAttendanceForm = document.getElementById("classAttendanceForm");
 if (classAttendanceForm) classAttendanceForm.addEventListener("submit", saveClassAttendance);
+
+const openStudentsModalButton = document.getElementById("openStudentsModalButton");
+if (openStudentsModalButton) openStudentsModalButton.addEventListener("click", openStudentsModal);
+
+const closeStudentsModalButton = document.getElementById("closeStudentsModalButton");
+if (closeStudentsModalButton) closeStudentsModalButton.addEventListener("click", closeStudentsModal);
+
+const cancelStudentsModalButton = document.getElementById("cancelStudentsModalButton");
+if (cancelStudentsModalButton) cancelStudentsModalButton.addEventListener("click", closeStudentsModal);
+
+const addSelectedStudentsButton = document.getElementById("addSelectedStudentsButton");
+if (addSelectedStudentsButton) addSelectedStudentsButton.addEventListener("click", addSelectedStudentsToClass);
+
+const studentModalSearch = document.getElementById("studentModalSearch");
+if (studentModalSearch) {
+  studentModalSearch.addEventListener("input", function () {
+    modalSearchTerm = studentModalSearch.value.trim();
+    renderAvailableStudentsModal();
+  });
+}
+
+const studentsModal = document.getElementById("studentsModal");
+if (studentsModal) {
+  studentsModal.addEventListener("click", function (event) {
+    if (event.target === studentsModal) closeStudentsModal();
+  });
+}
 
 guardPage();
