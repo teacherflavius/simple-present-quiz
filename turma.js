@@ -6,7 +6,7 @@ let classStudentIds = new Set();
 function getClassNumber() {
   const params = new URLSearchParams(window.location.search);
   const value = Number(params.get("id"));
-  if (!Number.isInteger(value) || value < 1 || value > 45) return null;
+  if (!Number.isInteger(value) || value < 1) return null;
   return value;
 }
 
@@ -66,12 +66,16 @@ function formatBrazilianDate(value) {
 }
 
 function isEnrolled(student) {
-  return student.enrolled === true || student.enrolled === "true" || !!student.enrollment_code;
+  return student.enrolled === true || student.enrolled === "true" || !!student.enrollment_code || !!student.email;
+}
+
+function getStudentId(student) {
+  return student.user_id || student.id;
 }
 
 function getClassStudents() {
   return allStudents.filter(function (student) {
-    return classStudentIds.has(student.user_id || student.id);
+    return classStudentIds.has(getStudentId(student));
   });
 }
 
@@ -247,7 +251,7 @@ async function removeStudentFromClass(userId, button) {
 }
 
 function renderStudentCard(student, action) {
-  const userId = escapeHtml(student.user_id || student.id);
+  const userId = escapeHtml(getStudentId(student));
   const name = escapeHtml(student.name || student.email || "Aluno sem nome");
   const email = escapeHtml(student.email || "Não informado");
   const enrollmentCode = escapeHtml(student.enrollment_code || "Não informado");
@@ -277,7 +281,7 @@ function renderAttendanceStudents() {
 
   list.className = "";
   list.innerHTML = classStudents.map(function (student) {
-    const userId = escapeHtml(student.user_id || student.id);
+    const userId = escapeHtml(getStudentId(student));
     const name = escapeHtml(student.name || student.email || "Aluno sem nome");
     const email = escapeHtml(student.email || "Não informado");
     return '<div class="class-attendance-row">' +
@@ -312,7 +316,7 @@ function renderLists() {
 
   const classStudents = getClassStudents();
   const availableStudents = allStudents.filter(function (student) {
-    return !classStudentIds.has(student.user_id || student.id);
+    return !classStudentIds.has(getStudentId(student));
   });
 
   if (!classStudents.length) {
@@ -327,7 +331,7 @@ function renderLists() {
 
   if (!availableStudents.length) {
     availableList.className = "empty";
-    availableList.textContent = "Todos os alunos matriculados já estão nesta turma.";
+    availableList.textContent = allStudents.length ? "Todos os alunos matriculados já estão nesta turma." : "Nenhum aluno matriculado foi encontrado. Verifique se há alunos cadastrados em Alunos Matriculados.";
   } else {
     availableList.className = "";
     availableList.innerHTML = availableStudents.map(function (student) {
@@ -399,7 +403,7 @@ async function guardPage() {
 
   if (!currentClassNumber) {
     document.getElementById("classTitle").textContent = "Turma inválida";
-    status.textContent = "Informe uma turma entre 1 e 45.";
+    status.textContent = "Informe uma turma válida.";
     document.body.classList.remove("auth-checking");
     return;
   }
