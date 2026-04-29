@@ -360,7 +360,7 @@
       try {
         await loadCompletedExercises();
         renderExercises();
-        setPageStatus("Aluno conectado: " + currentUser.email + ". Marque ou desmarque os exercícios no próprio card.");
+        setPageStatus("Aluno conectado: " + currentUser.email + ".");
       } catch (error) {
         setPageStatus("Não foi possível carregar seus registros. Execute o SQL daily_exercise_completion no Supabase.");
       }
