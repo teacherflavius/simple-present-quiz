@@ -32,6 +32,40 @@ function makeExerciseId(title) {
     .replace(/^-+|-+$/g, "") + "-" + Date.now();
 }
 
+function getScheduledAtIso() {
+  const dateValue = document.getElementById("publishDate").value;
+  const timeValue = document.getElementById("publishTime").value;
+
+  if (!dateValue && !timeValue) return null;
+  if (!dateValue || !timeValue) throw new Error("Para programar a publicação, preencha data e hora.");
+
+  const localDate = new Date(dateValue + "T" + timeValue + ":00");
+  if (Number.isNaN(localDate.getTime())) throw new Error("Data ou hora de publicação inválida.");
+
+  return localDate.toISOString();
+}
+
+function formatDateTime(value) {
+  if (!value) return "Publicação imediata";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function publicationStatus(exercise) {
+  if (!exercise.is_active) return "Inativo";
+  if (!exercise.scheduled_publish_at) return "Publicado";
+  const scheduled = new Date(exercise.scheduled_publish_at);
+  if (!Number.isNaN(scheduled.getTime()) && scheduled > new Date()) return "Programado";
+  return "Publicado";
+}
+
 async function loadTeacherExercises() {
   const client = Auth.getClient();
   const response = await client.rpc("get_teacher_created_exercises");
@@ -43,7 +77,8 @@ function renderExerciseCard(exercise) {
   return '<div class="exercise-card">' +
     '<strong>' + escapeHtml(exercise.exercise_title || "Exercício sem título") + '</strong>' +
     '<p><b>Link:</b> <a href="' + escapeHtml(exercise.exercise_url || "#") + '" target="_blank" rel="noopener noreferrer" style="color:#c4b5fd;">' + escapeHtml(exercise.exercise_url || "") + '</a></p>' +
-    '<p><b>Status:</b> ' + (exercise.is_active ? 'Ativo' : 'Inativo') + '</p>' +
+    '<p><b>Publicação:</b> ' + escapeHtml(formatDateTime(exercise.scheduled_publish_at)) + '</p>' +
+    '<p><b>Status:</b> ' + escapeHtml(publicationStatus(exercise)) + '</p>' +
   '</div>';
 }
 
@@ -78,18 +113,20 @@ async function createExercise(event) {
   try {
     if (!title || !url) throw new Error("Informe o título e o link do exercício.");
 
+    const scheduledAt = getScheduledAtIso();
     const client = Auth.getClient();
     const response = await client.rpc("create_teacher_exercise", {
       target_exercise_id: makeExerciseId(title),
       target_exercise_title: title,
-      target_exercise_url: url
+      target_exercise_url: url,
+      target_scheduled_publish_at: scheduledAt
     });
 
     if (response.error) throw response.error;
 
     document.getElementById("createExerciseForm").reset();
     message.className = "empty";
-    message.textContent = "Exercício salvo e publicado na página Exercícios Diários.";
+    message.textContent = scheduledAt ? "Exercício salvo e programado." : "Exercício salvo e publicado na página Exercícios Diários.";
     await renderTeacherExercises();
   } catch (error) {
     message.className = "error";
