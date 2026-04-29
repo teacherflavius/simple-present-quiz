@@ -266,6 +266,59 @@ $$;
 
 grant execute on function public.get_my_student_class() to authenticated;
 
+create or replace function public.get_teacher_class_activity_history(target_class_number integer)
+returns table (
+  frequency_id text,
+  class_number integer,
+  user_id text,
+  student_name text,
+  student_email text,
+  enrollment_code text,
+  class_date date,
+  attendance_status text,
+  class_notes text,
+  created_at timestamptz,
+  updated_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+begin
+  if not public.is_teacher_admin() then
+    raise exception 'Acesso negado: usuário não cadastrado como professor.';
+  end if;
+
+  if target_class_number < 1 or target_class_number > 45 then
+    raise exception 'Turma inválida. Use um número entre 1 e 45.';
+  end if;
+
+  return query
+  select
+    sf.id::text as frequency_id,
+    cs.class_number,
+    sf.user_id::text,
+    coalesce(p.name, u.raw_user_meta_data ->> 'name', u.email, 'Aluno sem nome')::text as student_name,
+    coalesce(p.email, u.email, '')::text as student_email,
+    coalesce(p.enrollment_code, u.raw_user_meta_data ->> 'enrollment_code', '')::text as enrollment_code,
+    sf.class_date,
+    sf.attendance_status,
+    coalesce(sf.class_notes, '')::text as class_notes,
+    sf.created_at,
+    sf.updated_at
+  from public.student_frequency sf
+  join public.class_students cs
+    on cs.user_id = sf.user_id
+   and cs.class_number = target_class_number
+  left join public.profiles p on p.id = sf.user_id
+  left join auth.users u on u.id = sf.user_id
+  where sf.class_notes ilike ('[Turma ' || target_class_number || ']%')
+  order by sf.class_date desc, sf.created_at desc, student_name asc;
+end;
+$$;
+
+grant execute on function public.get_teacher_class_activity_history(integer) to authenticated;
+
 create or replace function public.add_teacher_class_student(
   target_class_number integer,
   target_user_id uuid
