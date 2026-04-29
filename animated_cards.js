@@ -14,6 +14,14 @@
     }
   }
 
+  function loadClassRecordedLessonsExtension() {
+    if (document.querySelector('script[src^="class_recorded_lessons.js"]')) return;
+    var script = document.createElement("script");
+    script.src = "class_recorded_lessons.js?v=20260429-1";
+    script.defer = true;
+    document.body.appendChild(script);
+  }
+
   function initParticles() {
     var canvas = document.getElementById("particles");
     if (!canvas || canvas.dataset.initialized === "true") return;
@@ -87,19 +95,6 @@
       if (el.dataset.animatedCardsBound === "true") return;
       el.dataset.animatedCardsBound = "true";
 
-      if (el.classList.contains("menu-button") || el.classList.contains("student-card")) {
-        el.addEventListener("mousemove", function (event) {
-          var rect = el.getBoundingClientRect();
-          var rx = ((event.clientY - rect.top) / rect.height - 0.5) * -10;
-          var ry = ((event.clientX - rect.left) / rect.width - 0.5) * 10;
-          el.style.transform = "perspective(600px) translateY(-4px) scale(1.02) rotateX(" + rx + "deg) rotateY(" + ry + "deg)";
-        });
-
-        el.addEventListener("mouseleave", function () {
-          el.style.transform = "";
-        });
-      }
-
       el.addEventListener("click", function (event) {
         var rect = el.getBoundingClientRect();
         var size = Math.max(rect.width, rect.height);
@@ -114,6 +109,7 @@
 
   function init() {
     injectBackground();
+    loadClassRecordedLessonsExtension();
     initParticles();
     initTiltAndRipple();
 
