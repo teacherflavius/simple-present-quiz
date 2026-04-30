@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Turma - Teacher Flávio</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase_config.js?v=20260429-3"></script>
-  <script src="auth.js?v=20260429-3"></script>
-  <link rel="stylesheet" href="professor.css?v=20260429-3">
+  <script src="supabase_config.js?v=20260429-10"></script>
+  <script src="auth.js?v=20260429-10"></script>
+  <link rel="stylesheet" href="professor.css?v=20260429-10">
   <style>
     .class-attendance-row { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
     .class-attendance-row label { display: flex; align-items: center; gap: 10px; color: #f1f5f9; font-weight: bold; margin-bottom: 10px; }
@@ -40,7 +40,20 @@
     .modal-add-button { border:1.5px solid rgba(129,140,248,0.45); background:rgba(129,140,248,0.14); color:#c4b5fd; }
     .modal-cancel-button { border:1.5px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.05); color:#cbd5e1; }
     .modal-add-button:disabled { opacity:0.65; cursor:not-allowed; }
+    .lesson-attendance-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 16px; margin-bottom: 16px; overflow: hidden; }
+    .lesson-attendance-table { width: 100%; border-collapse: separate; border-spacing: 0; overflow: hidden; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); }
+    .lesson-attendance-table th { background: rgba(129,140,248,0.14); color: #f1f5f9; padding: 13px; text-align: left; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .lesson-attendance-table th:last-child { text-align: right; }
+    .lesson-attendance-table td { padding: 11px; border-bottom: 1px solid rgba(255,255,255,0.06); color: #cbd5e1; font-size: 13px; vertical-align: middle; }
+    .lesson-attendance-table tr:last-child td { border-bottom: none; }
+    .lesson-date-input, .lesson-select { width: 100%; background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px; color: #f1f5f9; font-size: 13px; font-family: Georgia, serif; }
+    .lesson-select option { color: #0f172a; }
+    .lesson-status-pill { display: inline-flex; min-width: 58px; justify-content: center; align-items: center; border-radius: 999px; padding: 8px 12px; background: linear-gradient(135deg, rgba(129,140,248,0.28), rgba(167,139,250,0.18)); border: 1px solid rgba(196,181,253,0.35); color: #f1f5f9; font-weight: bold; }
+    .lesson-save-button { width: 100%; border-radius: 10px; padding: 10px; border: 1.5px solid rgba(129,140,248,0.45); background: rgba(129,140,248,0.10); color: #c4b5fd; font-family: Georgia, serif; font-weight: bold; cursor: pointer; }
+    .lesson-save-button:disabled { opacity: 0.65; cursor: not-allowed; }
+    .legacy-attendance-panel { display: none !important; }
     @media (min-width: 680px) { .modal-actions { grid-template-columns:1fr 1fr; } }
+    @media (max-width: 560px) { .lesson-attendance-table th, .lesson-attendance-table td { padding: 9px 7px; font-size: 12px; } }
   </style>
 </head>
 <body class="auth-checking">
@@ -73,23 +86,25 @@
       </form>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="lessonAttendancePanel">
+      <h2>Registro de frequência e lições</h2>
+      <p class="class-attendance-help">Para cada aluno, escolha uma data e registre a lição realizada. As lições vão de L1 a L74.</p>
+      <div id="lessonAttendanceTables" class="empty">Carregando tabela de frequência...</div>
+    </div>
+
+    <div class="panel legacy-attendance-panel">
       <h2>Registrar aula da turma</h2>
-      <p class="class-attendance-help">Selecione os alunos que participaram desta aula, marque se compareceram ou faltaram e registre o que foi feito.</p>
       <form id="classAttendanceForm">
-        <label for="classDate" style="display:block; color:#cbd5e1; font-size:13px; margin-bottom:6px;">Data da aula</label>
-        <input id="classDate" type="text" inputmode="numeric" maxlength="8" placeholder="DD/MM/AA" pattern="\d{2}/\d{2}/\d{2}" required />
-        <label for="classNotes" style="display:block; color:#cbd5e1; font-size:13px; margin:12px 0 6px;">O que foi feito na aula</label>
-        <textarea id="classNotes" placeholder="Ex.: conversação, revisão de simple present, correção de tarefa, leitura em voz alta..."></textarea>
-        <div id="attendanceStudentsList" style="margin-top:16px;" class="empty">Carregando alunos da turma...</div>
-        <button class="delete-button" type="submit" style="border-color:rgba(129,140,248,0.45); background:rgba(129,140,248,0.10); color:#c4b5fd;">SALVAR FREQUÊNCIA DA AULA</button>
-        <div id="attendanceMessage" class="empty" style="margin-top:10px;"></div>
+        <input id="classDate" type="text" inputmode="numeric" maxlength="8" placeholder="DD/MM/AA" pattern="\d{2}/\d{2}/\d{2}" />
+        <textarea id="classNotes"></textarea>
+        <div id="attendanceStudentsList"></div>
+        <button class="delete-button" type="submit">SALVAR FREQUÊNCIA DA AULA</button>
+        <div id="attendanceMessage"></div>
       </form>
     </div>
 
-    <div class="panel">
+    <div class="panel legacy-attendance-panel">
       <h2>Histórico de aulas e atividades da turma</h2>
-      <p class="class-attendance-help">Veja todas as aulas já registradas para os alunos atualmente inscritos nesta turma.</p>
       <div id="classHistoryList" class="empty">Carregando histórico da turma...</div>
     </div>
 
@@ -139,7 +154,8 @@
       modal.setAttribute('aria-hidden', 'true');
     }
   </script>
-  <script src="turma.js?v=20260429-3"></script>
-  <script src="animated_cards.js?v=20260429-3"></script>
+  <script src="turma.js?v=20260429-10"></script>
+  <script src="class_lesson_attendance.js?v=20260429-1"></script>
+  <script src="animated_cards.js?v=20260429-10"></script>
 </body>
 </html>
