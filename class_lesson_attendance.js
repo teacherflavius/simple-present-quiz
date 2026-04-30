@@ -4,7 +4,7 @@
   var specialLessonOptions = [
     "Feriado",
     "Teacher Cancelou",
-    "Aluno cancelou",
+    "Não compareceu",
     "Conversation",
     "Outras atividades",
     "Problemas técnicos"
