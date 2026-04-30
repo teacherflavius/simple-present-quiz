@@ -2,6 +2,11 @@
 -- Execute no Supabase em SQL Editor > Run.
 -- Este arquivo complementa supabase_licoes_turma.sql.
 
+-- Migra registros antigos, caso já exista algum como "Aluno cancelou".
+update public.class_lesson_records
+set lesson_code = 'Não compareceu'
+where lesson_code = 'Aluno cancelou';
+
 alter table public.class_lesson_records
   drop constraint if exists class_lesson_records_lesson_code_check;
 
@@ -12,7 +17,7 @@ alter table public.class_lesson_records
     or lesson_code in (
       'Feriado',
       'Teacher Cancelou',
-      'Aluno cancelou',
+      'Não compareceu',
       'Conversation',
       'Outras atividades',
       'Problemas técnicos'
@@ -42,7 +47,7 @@ begin
     or target_lesson_code in (
       'Feriado',
       'Teacher Cancelou',
-      'Aluno cancelou',
+      'Não compareceu',
       'Conversation',
       'Outras atividades',
       'Problemas técnicos'
