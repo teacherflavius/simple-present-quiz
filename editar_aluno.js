@@ -1,4 +1,4 @@
-let currentProfessorSession = null;
+let currentProfessorUser = null;
 let currentStudentId = null;
 let currentStudent = null;
 
@@ -25,10 +25,6 @@ const availabilityHours = [
 function getStudentId() {
   const params = new URLSearchParams(window.location.search);
   return params.get("id");
-}
-
-function redirectToLogin() {
-  window.location.href = "login.html?next=" + encodeURIComponent("editar_aluno.html?id=" + (currentStudentId || ""));
 }
 
 function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
@@ -159,11 +155,8 @@ async function guardPage() {
     return;
   }
 
-  currentProfessorSession = await Auth.getSession();
-  if (!currentProfessorSession || !currentProfessorSession.user) {
-    redirectToLogin();
-    return;
-  }
+  currentProfessorUser = await Auth.requireTeacherAdmin("/editar-aluno/?id=" + encodeURIComponent(currentStudentId));
+  if (!currentProfessorUser) return;
 
   try {
     const students = await loadStudents();
@@ -172,7 +165,7 @@ async function guardPage() {
     });
     if (!currentStudent) throw new Error("Aluno não encontrado.");
     fillForm(currentStudent);
-    status.textContent = "Professor autenticado: " + currentProfessorSession.user.email + ". Editando: " + (currentStudent.name || currentStudent.email || "aluno") + ".";
+    status.textContent = "Professor autenticado: " + currentProfessorUser.email + ". Editando: " + (currentStudent.name || currentStudent.email || "aluno") + ".";
     document.body.classList.remove("auth-checking");
   } catch (error) {
     status.textContent = "Não foi possível carregar o aluno: " + (error.message || "erro desconhecido") + ". Reexecute supabase_professor_admin.sql no Supabase.";
