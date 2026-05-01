@@ -58,6 +58,7 @@ function renderClassCard(row) {
   const links = [
     renderResourceLink(row.video_lesson_url, "ASSISTIR A AULA"),
     renderResourceLink(row.lesson_material_url, "ANOTAÇÕES DA AULA"),
+    renderResourceLink(row.recorded_lessons_url, "AULAS GRAVADAS"),
     renderResourceLink(row.whatsapp_group_url, "WHATSAPP")
   ].join("");
 
@@ -89,7 +90,7 @@ async function renderMyClass() {
     content.innerHTML = rows.map(renderClassCard).join("");
   } catch (error) {
     content.className = "empty-panel";
-    content.textContent = "Não foi possível carregar sua turma. Reexecute o arquivo supabase_turmas.sql no Supabase.";
+    content.textContent = "Não foi possível carregar sua turma. Reexecute os arquivos supabase_turmas.sql e supabase_aulas_gravadas.sql no Supabase.";
   }
 }
 
