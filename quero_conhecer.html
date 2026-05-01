@@ -25,7 +25,13 @@
     @keyframes drift1 { to { transform:translate(60px,80px); } }
     @keyframes drift2 { to { transform:translate(-60px,-60px); } }
     @keyframes fadeUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
-    @keyframes fly { 0% { transform:translateX(0) rotate(-5deg); } 100% { transform:translateX(12px) rotate(5deg); } }
+    @keyframes fly {
+      0% { transform:translate3d(-16vw,0,0) rotate(-4deg); opacity:0; }
+      8% { opacity:.92; }
+      50% { transform:translate3d(50vw,14px,0) rotate(3deg); opacity:.95; }
+      92% { opacity:.92; }
+      100% { transform:translate3d(116vw,-6px,0) rotate(-4deg); opacity:0; }
+    }
     @keyframes pulseRed {
       0% { transform:scale(1); box-shadow:0 0 0 0 rgba(232,34,42,.68),0 12px 32px rgba(232,34,42,.42); }
       70% { transform:scale(1.045); box-shadow:0 0 0 16px rgba(232,34,42,0),0 18px 42px rgba(232,34,42,.55); }
@@ -44,7 +50,11 @@
       text-decoration:none; display:inline-flex; align-items:center; justify-content:center;
     }
     .btn-alunos:hover { transform:translateY(-2px); box-shadow:0 7px 24px rgba(232,34,42,.6); }
-    .plane { font-size:2.4rem; animation:fly 3.5s ease-in-out infinite alternate; filter:drop-shadow(0 2px 8px rgba(0,0,0,.3)); }
+    .plane {
+      position:fixed; top:86px; left:0; display:block; font-size:clamp(1.9rem,4vw,2.7rem);
+      line-height:1; pointer-events:none; z-index:1; animation:fly 15s linear infinite;
+      filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));
+    }
     .hero { display:flex; flex-direction:column; align-items:center; text-align:center; padding:40px 24px 20px; }
     .hero-tag {
       background:rgba(255,255,255,.15); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,.25);
@@ -122,9 +132,13 @@
     .section-label { max-width:680px; margin:0 auto 14px; font-size:clamp(1rem,2vw,1.12rem); font-weight:800; line-height:1.5; color:rgba(255,255,255,.95); }
     .instagram-card { max-width:680px; margin:26px auto 60px; }
     .instagram-text { margin-bottom:18px; font-weight:800; }
+    @media (prefers-reduced-motion:reduce) {
+      .plane { animation:none; transform:translateX(74vw) rotate(-4deg); opacity:.65; }
+    }
     @media (max-width:640px) { .benefits-list, .languages-list { grid-template-columns:1fr; } }
     @media (max-width:520px) {
       header { padding:16px 20px; }
+      .plane { top:76px; font-size:2rem; }
       .hero h1 { font-size:1.55rem; }
       .new-class-content, .course-benefits-card, .availability-card, .investment-card, .instructor-card, .instagram-card { padding:28px 18px; }
       .instructor-photo-card { padding:8px; }
@@ -139,7 +153,7 @@
 <body>
   <header>
     <a class="btn-alunos" href="/login.html?next=area_do_estudante.html">Área de alunos</a>
-    <span class="plane">✈️</span>
+    <span class="plane" aria-hidden="true">✈️</span>
   </header>
 
   <section class="hero">
