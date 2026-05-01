@@ -169,64 +169,6 @@
       top: 0; left: 0;
     }
 
-    .video-placeholder {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      background: rgba(0,0,0,0.4);
-    }
-    .video-placeholder .play-icon {
-      font-size: 3.5rem;
-      opacity: 0.6;
-    }
-    .video-placeholder p {
-      font-size: 0.9rem;
-      opacity: 0.55;
-      font-family: 'Montserrat', sans-serif;
-    }
-
-    .url-form {
-      max-width: 780px;
-      margin: 16px auto 0;
-      padding: 0 20px;
-      display: flex;
-      gap: 10px;
-      animation: fadeUp 0.8s 0.45s ease both;
-    }
-    .url-form input {
-      flex: 1;
-      padding: 12px 18px;
-      border-radius: 50px;
-      border: 2px solid rgba(255,255,255,0.3);
-      background: rgba(255,255,255,0.1);
-      backdrop-filter: blur(4px);
-      color: #fff;
-      font-size: 0.9rem;
-      font-family: 'Open Sans', sans-serif;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .url-form input::placeholder { color: rgba(255,255,255,0.45); }
-    .url-form input:focus { border-color: rgba(255,255,255,0.7); }
-    .url-form button {
-      padding: 12px 22px;
-      border-radius: 50px;
-      border: none;
-      background: rgba(255,255,255,0.2);
-      color: #fff;
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 700;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: background 0.2s;
-      white-space: nowrap;
-    }
-    .url-form button:hover { background: rgba(255,255,255,0.35); }
-
     .cta-wrapper {
       display: flex;
       justify-content: center;
@@ -279,8 +221,6 @@
       header { padding: 16px 20px; }
       .hero h1 { font-size: 1.55rem; }
       .btn-inscricao { padding: 17px 36px; }
-      .url-form { flex-direction: column; }
-      .url-form button { border-radius: 50px; }
     }
   </style>
 </head>
@@ -305,62 +245,19 @@
 
   <div class="video-wrapper">
     <div class="video-box" id="videoBox">
-      <div class="video-placeholder" id="placeholder">
-        <span class="play-icon">▶️</span>
-        <p>Cole o link do YouTube abaixo para carregar o vídeo</p>
-      </div>
+      <iframe
+        src="https://www.youtube.com/embed/mZ2GyKKkteI?rel=0"
+        title="Vídeo de apresentação Teacher Flavio"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen>
+      </iframe>
     </div>
-  </div>
-
-  <div class="url-form">
-    <input type="text" id="ytUrl" placeholder="Cole aqui o link do YouTube (ex: https://youtu.be/...)"/>
-    <button onclick="loadVideo()">Carregar vídeo</button>
   </div>
 
   <div class="cta-wrapper">
     <a href="/matricula/" class="btn-inscricao">FAZER INSCRIÇÃO</a>
   </div>
 
-  <script>
-    function getYouTubeId(url) {
-      const patterns = [
-        /(?:v=)([A-Za-z0-9_-]{11})/,
-        /(?:youtu\.be\/)([A-Za-z0-9_-]{11})/,
-        /(?:embed\/)([A-Za-z0-9_-]{11})/,
-      ];
-      for (const pattern of patterns) {
-        const match = url.match(pattern);
-        if (match) return match[1];
-      }
-      return null;
-    }
-
-    function loadVideo() {
-      const url   = document.getElementById('ytUrl').value.trim();
-      const box   = document.getElementById('videoBox');
-      const ph    = document.getElementById('placeholder');
-      const id    = getYouTubeId(url);
-
-      if (!id) {
-        document.getElementById('ytUrl').style.borderColor = '#ff6b6b';
-        setTimeout(() => document.getElementById('ytUrl').style.borderColor = '', 1500);
-        return;
-      }
-
-      if (ph) ph.remove();
-      const existing = box.querySelector('iframe');
-      if (existing) existing.remove();
-
-      const iframe = document.createElement('iframe');
-      iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`;
-      iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-      iframe.allowFullscreen = true;
-      box.appendChild(iframe);
-    }
-
-    document.getElementById('ytUrl').addEventListener('keydown', e => {
-      if (e.key === 'Enter') loadVideo();
-    });
-  </script>
 </body>
 </html>
