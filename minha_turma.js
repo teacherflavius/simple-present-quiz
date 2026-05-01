@@ -40,7 +40,49 @@ async function loadMyClass() {
   const client = Auth.getClient();
   const response = await client.rpc("get_my_student_class");
   if (response.error) throw response.error;
-  return response.data || [];
+  const rows = response.data || [];
+  return mergeRecordedLessonsUrls(rows);
+}
+
+async function mergeRecordedLessonsUrls(rows) {
+  if (!rows.length) return rows;
+
+  const hasRecordedLessonsUrl = rows.some(function (row) {
+    return typeof row.recorded_lessons_url !== "undefined";
+  });
+
+  const classNumbers = rows
+    .map(function (row) { return row.class_number; })
+    .filter(function (value, index, list) { return value && list.indexOf(value) === index; });
+
+  if (!classNumbers.length) return rows;
+
+  try {
+    const client = Auth.getClient();
+    const response = await client
+      .from("class_resources")
+      .select("class_number, recorded_lessons_url")
+      .in("class_number", classNumbers);
+
+    if (response.error) throw response.error;
+
+    const urlsByClass = {};
+    (response.data || []).forEach(function (item) {
+      urlsByClass[item.class_number] = item.recorded_lessons_url || "";
+    });
+
+    return rows.map(function (row) {
+      if (!row.recorded_lessons_url && urlsByClass[row.class_number]) {
+        return Object.assign({}, row, { recorded_lessons_url: urlsByClass[row.class_number] });
+      }
+      return row;
+    });
+  } catch (error) {
+    if (!hasRecordedLessonsUrl) {
+      console.warn("Campo recorded_lessons_url não disponível em class_resources:", error.message || error);
+    }
+    return rows;
+  }
 }
 
 function renderResourceLink(url, label) {
