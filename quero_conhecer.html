@@ -169,6 +169,104 @@
       top: 0; left: 0;
     }
 
+    .new-class-section {
+      width: 100%;
+      max-width: 860px;
+      margin: 34px auto 0;
+      padding: 0 24px;
+      text-align: center;
+      animation: fadeUp 0.8s 0.45s ease both;
+    }
+
+    .new-class-content {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 26px;
+      padding: 34px 28px;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.28);
+      backdrop-filter: blur(7px);
+    }
+
+    .new-class-content h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(1.65rem, 4vw, 2.7rem);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+      text-shadow: 0 3px 16px rgba(0,0,0,0.28);
+    }
+
+    .limited-card {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-red);
+      color: var(--white);
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(1rem, 3vw, 1.35rem);
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 14px 30px;
+      border: 2px solid rgba(255,255,255,0.9);
+      border-radius: 18px;
+      margin-bottom: 24px;
+      box-shadow: 0 0 0 rgba(232,34,42,0.65), 0 12px 32px rgba(232,34,42,0.42);
+      animation: pulseRed 1.35s ease-in-out infinite;
+    }
+
+    @keyframes pulseRed {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(232,34,42,0.68), 0 12px 32px rgba(232,34,42,0.42);
+      }
+      70% {
+        transform: scale(1.045);
+        box-shadow: 0 0 0 16px rgba(232,34,42,0), 0 18px 42px rgba(232,34,42,0.55);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(232,34,42,0), 0 12px 32px rgba(232,34,42,0.42);
+      }
+    }
+
+    .new-class-question {
+      max-width: 720px;
+      margin: 0 auto 16px;
+      font-size: clamp(1.05rem, 2.4vw, 1.35rem);
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .new-class-opportunity {
+      max-width: 680px;
+      margin: 0 auto 24px;
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      color: rgba(255,255,255,0.9);
+      line-height: 1.55;
+    }
+
+    .audience-list {
+      list-style: none;
+      max-width: 520px;
+      margin: 0 auto;
+      display: grid;
+      gap: 12px;
+      text-align: left;
+    }
+
+    .audience-list li {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 16px;
+      padding: 13px 16px;
+      font-size: clamp(0.98rem, 2vw, 1.08rem);
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
     .cta-wrapper {
       display: flex;
       justify-content: center;
@@ -220,6 +318,9 @@
     @media (max-width: 520px) {
       header { padding: 16px 20px; }
       .hero h1 { font-size: 1.55rem; }
+      .new-class-content { padding: 28px 18px; }
+      .limited-card { width: 100%; padding: 14px 18px; }
+      .audience-list { text-align: left; }
       .btn-inscricao { padding: 17px 36px; }
     }
   </style>
@@ -254,6 +355,26 @@
       </iframe>
     </div>
   </div>
+
+  <section class="new-class-section" aria-labelledby="newClassTitle">
+    <div class="new-class-content">
+      <h2 id="newClassTitle">NOVA TURMA DE INGLÊS</h2>
+
+      <div class="limited-card">VAGAS LIMITADAS</div>
+
+      <p class="new-class-question">Você quer aprender inglês de verdade, mesmo que ache que não leva jeito para idiomas?</p>
+
+      <p class="new-class-opportunity">Então essa pode ser a oportunidade que você estava esperando.</p>
+
+      <p class="new-class-opportunity">Meu curso foi criado para pessoas que:</p>
+
+      <ul class="audience-list">
+        <li>✔️ nunca estudaram inglês</li>
+        <li>✔️ estudaram mas não conseguem falar</li>
+        <li>✔️ querem aprender de forma simples e prática</li>
+      </ul>
+    </div>
+  </section>
 
   <div class="cta-wrapper">
     <a href="/matricula/" class="btn-inscricao">FAZER INSCRIÇÃO</a>
