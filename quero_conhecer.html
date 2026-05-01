@@ -181,7 +181,9 @@
     .new-class-content,
     .course-benefits-card,
     .availability-card,
-    .investment-card {
+    .investment-card,
+    .instructor-card,
+    .instagram-card {
       background: rgba(255,255,255,0.12);
       border: 1px solid rgba(255,255,255,0.22);
       border-radius: 26px;
@@ -192,7 +194,8 @@
 
     .new-class-content h2,
     .course-benefits-card h2,
-    .availability-card h2 {
+    .availability-card h2,
+    .instructor-card h2 {
       font-family: 'Montserrat', sans-serif;
       font-size: clamp(1.65rem, 4vw, 2.7rem);
       font-weight: 900;
@@ -260,7 +263,9 @@
       line-height: 1.45;
     }
 
-    .new-class-opportunity {
+    .new-class-opportunity,
+    .instructor-text,
+    .instagram-text {
       max-width: 680px;
       margin: 0 auto 24px;
       font-size: clamp(1rem, 2vw, 1.15rem);
@@ -270,7 +275,9 @@
 
     .audience-list,
     .benefits-list,
-    .availability-list {
+    .availability-list,
+    .credentials-list,
+    .languages-list {
       list-style: none;
       max-width: 560px;
       margin: 0 auto;
@@ -281,7 +288,9 @@
 
     .audience-list li,
     .benefits-list li,
-    .availability-list li {
+    .availability-list li,
+    .credentials-list li,
+    .languages-list li {
       background: rgba(255,255,255,0.1);
       border: 1px solid rgba(255,255,255,0.18);
       border-radius: 16px;
@@ -292,7 +301,8 @@
     }
 
     .course-benefits-section,
-    .availability-section {
+    .availability-section,
+    .instructor-section {
       width: 100%;
       max-width: 860px;
       margin: 30px auto 0;
@@ -302,13 +312,15 @@
     }
 
     .course-benefits-card,
-    .availability-card {
+    .availability-card,
+    .instructor-card {
       border-color: rgba(255,255,255,0.28);
       background: linear-gradient(145deg, rgba(255,255,255,0.16), rgba(255,255,255,0.09));
     }
 
     .course-benefits-card h2,
-    .availability-card h2 {
+    .availability-card h2,
+    .instructor-card h2 {
       margin-bottom: 24px;
     }
 
@@ -320,6 +332,26 @@
     .availability-list {
       max-width: 520px;
       margin-bottom: 24px;
+    }
+
+    .credentials-list,
+    .languages-list {
+      max-width: 620px;
+      margin-bottom: 24px;
+    }
+
+    .languages-list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      text-align: center;
+    }
+
+    .section-label {
+      max-width: 680px;
+      margin: 0 auto 14px;
+      font-size: clamp(1rem, 2vw, 1.12rem);
+      font-weight: 800;
+      line-height: 1.5;
+      color: rgba(255,255,255,0.95);
     }
 
     .availability-highlight {
@@ -383,10 +415,11 @@
     .trial-cta-wrapper {
       display: flex;
       justify-content: center;
-      padding: 30px 24px 60px;
+      padding: 30px 24px 28px;
     }
 
-    .btn-trial {
+    .btn-trial,
+    .btn-instagram {
       background: var(--accent-green);
       color: var(--white);
       font-family: 'Montserrat', sans-serif;
@@ -409,7 +442,14 @@
       overflow: hidden;
     }
 
-    .btn-trial::after {
+    .btn-instagram {
+      background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af, #515bd4);
+      box-shadow: 0 6px 30px rgba(221,42,123,0.45);
+      margin-top: 6px;
+    }
+
+    .btn-trial::after,
+    .btn-instagram::after {
       content: '';
       position: absolute;
       inset: 0;
@@ -418,13 +458,31 @@
       transition: transform 0.5s;
     }
 
-    .btn-trial:hover {
+    .btn-trial:hover,
+    .btn-instagram:hover {
       transform: translateY(-3px) scale(1.02);
       box-shadow: 0 10px 40px rgba(27,187,92,0.7);
     }
 
-    .btn-trial:hover::after {
+    .btn-instagram:hover {
+      box-shadow: 0 10px 40px rgba(221,42,123,0.62);
+    }
+
+    .btn-trial:hover::after,
+    .btn-instagram:hover::after {
       transform: translateX(100%);
+    }
+
+    .instagram-card {
+      max-width: 680px;
+      margin: 26px auto 60px;
+      border-color: rgba(255,255,255,0.28);
+      background: linear-gradient(145deg, rgba(255,255,255,0.16), rgba(255,255,255,0.09));
+    }
+
+    .instagram-text {
+      margin-bottom: 18px;
+      font-weight: 800;
     }
 
     .cta-wrapper {
@@ -476,7 +534,8 @@
     }
 
     @media (max-width: 640px) {
-      .benefits-list { grid-template-columns: 1fr; }
+      .benefits-list,
+      .languages-list { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 520px) {
@@ -485,14 +544,19 @@
       .new-class-content,
       .course-benefits-card,
       .availability-card,
-      .investment-card { padding: 28px 18px; }
+      .investment-card,
+      .instructor-card,
+      .instagram-card { padding: 28px 18px; }
       .limited-card { width: 100%; padding: 14px 18px; }
       .audience-list,
       .benefits-list,
-      .availability-list { text-align: left; }
+      .availability-list,
+      .credentials-list,
+      .languages-list { text-align: left; }
       .price-pulse { width: 100%; padding: 16px 18px; }
       .btn-inscricao,
-      .btn-trial { width: 100%; padding: 17px 26px; }
+      .btn-trial,
+      .btn-instagram { width: 100%; padding: 17px 26px; }
     }
   </style>
 </head>
@@ -593,6 +657,35 @@
   <div class="trial-cta-wrapper">
     <a href="https://wa.me/5534998349756?text=Teacher%2C%20quero%20marcar%20uma%20aula%20experimental%20gratuita" class="btn-trial">AGENDAR AULA EXPERIMENTAL</a>
   </div>
+
+  <section class="instructor-section" aria-labelledby="instructorTitle">
+    <div class="instructor-card">
+      <h2 id="instructorTitle">Sobre o professor</h2>
+
+      <p class="instructor-text">Eu me chamo Flávio, tenho 34 anos e sou professor de idiomas há 15 anos.</p>
+
+      <p class="section-label">Tenho as seguintes formações:</p>
+      <ul class="credentials-list">
+        <li>Bacharelado em Tradução</li>
+        <li>Mestrado em Linguística</li>
+        <li>Doutorado em Linguística</li>
+        <li>Certificado Cambridge</li>
+      </ul>
+
+      <p class="instructor-text">Durante os meus estudos fiz intercâmbios em Londres, em Roma e em Zurique. Dou aulas e faço traduções dos seguintes idiomas:</p>
+
+      <ul class="languages-list">
+        <li>Inglês</li>
+        <li>Italiano</li>
+        <li>Alemão</li>
+      </ul>
+    </div>
+
+    <div class="instagram-card">
+      <p class="instagram-text">Confira mais sobre meu trabalho em meu Instagram:</p>
+      <a href="https://www.instagram.com/teacher.flavius" class="btn-instagram" target="_blank" rel="noopener noreferrer">VER INSTAGRAM</a>
+    </div>
+  </section>
 
 </body>
 </html>
