@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Teacher Flavio – Faça Parte do Time</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-deep:   #0a2a6e;
+      --blue-mid:    #1a4fc4;
+      --blue-light:  #2e78f8;
+      --accent-red:  #e8222a;
+      --accent-green:#1bbb5c;
+      --white:       #ffffff;
+      --cloud:       rgba(255,255,255,0.07);
+    }
+
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background: linear-gradient(160deg, var(--blue-deep) 0%, var(--blue-mid) 55%, var(--blue-light) 100%);
+      min-height: 100vh;
+      color: var(--white);
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      opacity: 0.12;
+      background: radial-gradient(circle, #fff 0%, transparent 70%);
+    }
+    body::before {
+      width: 700px; height: 700px;
+      top: -200px; left: -200px;
+      animation: drift1 18s ease-in-out infinite alternate;
+    }
+    body::after {
+      width: 500px; height: 500px;
+      bottom: -150px; right: -150px;
+      animation: drift2 22s ease-in-out infinite alternate;
+    }
+    @keyframes drift1 { to { transform: translate(60px, 80px); } }
+    @keyframes drift2 { to { transform: translate(-60px, -60px); } }
+
+    header {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 22px 40px;
+      gap: 20px;
+    }
+
+    .btn-alunos {
+      background: var(--accent-red);
+      color: var(--white);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 0.88rem;
+      letter-spacing: 0.04em;
+      padding: 12px 28px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(232,34,42,0.45);
+      transition: transform 0.18s, box-shadow 0.18s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-alunos:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 24px rgba(232,34,42,0.6);
+    }
+
+    .plane {
+      font-size: 2.4rem;
+      animation: fly 3.5s ease-in-out infinite alternate;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+      cursor: default;
+    }
+    @keyframes fly {
+      0%   { transform: translateX(0) rotate(-5deg); }
+      100% { transform: translateX(12px) rotate(5deg); }
+    }
+
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 40px 24px 20px;
+      gap: 0;
+    }
+
+    .hero-tag {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 50px;
+      padding: 6px 20px;
+      font-size: 0.78rem;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      color: rgba(255,255,255,0.9);
+    }
+
+    .hero h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: clamp(1.8rem, 5vw, 3.6rem);
+      line-height: 1.15;
+      max-width: 860px;
+      text-shadow: 0 3px 20px rgba(0,0,0,0.3);
+      letter-spacing: -0.01em;
+      animation: fadeUp 0.8s ease both;
+    }
+    .hero h1 span.hi {
+      color: #ffe066;
+      display: inline-block;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-sub {
+      margin-top: 22px;
+      font-size: clamp(0.95rem, 2vw, 1.15rem);
+      color: rgba(255,255,255,0.85);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      animation: fadeUp 0.8s 0.2s ease both;
+    }
+
+    .video-wrapper {
+      margin: 36px auto 0;
+      width: 100%;
+      max-width: 780px;
+      padding: 0 20px;
+      animation: fadeUp 0.8s 0.35s ease both;
+    }
+
+    .video-box {
+      background: rgba(0,0,0,0.35);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+      aspect-ratio: 16/9;
+      position: relative;
+    }
+
+    .video-box iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      position: absolute;
+      top: 0; left: 0;
+    }
+
+    .video-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      background: rgba(0,0,0,0.4);
+    }
+    .video-placeholder .play-icon {
+      font-size: 3.5rem;
+      opacity: 0.6;
+    }
+    .video-placeholder p {
+      font-size: 0.9rem;
+      opacity: 0.55;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .url-form {
+      max-width: 780px;
+      margin: 16px auto 0;
+      padding: 0 20px;
+      display: flex;
+      gap: 10px;
+      animation: fadeUp 0.8s 0.45s ease both;
+    }
+    .url-form input {
+      flex: 1;
+      padding: 12px 18px;
+      border-radius: 50px;
+      border: 2px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(4px);
+      color: #fff;
+      font-size: 0.9rem;
+      font-family: 'Open Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .url-form input::placeholder { color: rgba(255,255,255,0.45); }
+    .url-form input:focus { border-color: rgba(255,255,255,0.7); }
+    .url-form button {
+      padding: 12px 22px;
+      border-radius: 50px;
+      border: none;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .url-form button:hover { background: rgba(255,255,255,0.35); }
+
+    .cta-wrapper {
+      display: flex;
+      justify-content: center;
+      padding: 40px 24px 60px;
+      animation: fadeUp 0.8s 0.55s ease both;
+    }
+
+    .btn-inscricao {
+      background: var(--accent-green);
+      color: var(--white);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: clamp(1rem, 2.5vw, 1.35rem);
+      letter-spacing: 0.06em;
+      padding: 20px 60px;
+      border: 3px solid var(--white);
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 6px 30px rgba(27,187,92,0.55);
+      transition: transform 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+      display: inline-block;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-inscricao::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%);
+      transform: translateX(-100%);
+      transition: transform 0.5s;
+    }
+    .btn-inscricao:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 10px 40px rgba(27,187,92,0.7);
+    }
+    .btn-inscricao:hover::after {
+      transform: translateX(100%);
+    }
+
+    .divider {
+      width: 60px; height: 3px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 2px;
+      margin: 0 auto 10px;
+    }
+
+    @media (max-width: 520px) {
+      header { padding: 16px 20px; }
+      .hero h1 { font-size: 1.55rem; }
+      .btn-inscricao { padding: 17px 36px; }
+      .url-form { flex-direction: column; }
+      .url-form button { border-radius: 50px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a class="btn-alunos" href="/aluno.html">Área de alunos</a>
+    <span class="plane">✈️</span>
+  </header>
+
+  <section class="hero">
+    <div class="hero-tag">🌍 Inglês que transforma vidas</div>
+
+    <h1>
+      <span class="hi">HI, FOLKS!</span> CHEGOU A SUA HORA DE FAZER<br>
+      PARTE DO TIME DE ALUNOS DO<br>
+      TEACHER FLAVIO
+    </h1>
+
+    <p class="hero-sub">Assista ao vídeo abaixo para conhecer a metodologia.</p>
+  </section>
+
+  <div class="video-wrapper">
+    <div class="video-box" id="videoBox">
+      <div class="video-placeholder" id="placeholder">
+        <span class="play-icon">▶️</span>
+        <p>Cole o link do YouTube abaixo para carregar o vídeo</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="url-form">
+    <input type="text" id="ytUrl" placeholder="Cole aqui o link do YouTube (ex: https://youtu.be/...)"/>
+    <button onclick="loadVideo()">Carregar vídeo</button>
+  </div>
+
+  <div class="cta-wrapper">
+    <a href="/matricula/" class="btn-inscricao">FAZER INSCRIÇÃO</a>
+  </div>
+
+  <script>
+    function getYouTubeId(url) {
+      const patterns = [
+        /(?:v=)([A-Za-z0-9_-]{11})/,
+        /(?:youtu\.be\/)([A-Za-z0-9_-]{11})/,
+        /(?:embed\/)([A-Za-z0-9_-]{11})/,
+      ];
+      for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match) return match[1];
+      }
+      return null;
+    }
+
+    function loadVideo() {
+      const url   = document.getElementById('ytUrl').value.trim();
+      const box   = document.getElementById('videoBox');
+      const ph    = document.getElementById('placeholder');
+      const id    = getYouTubeId(url);
+
+      if (!id) {
+        document.getElementById('ytUrl').style.borderColor = '#ff6b6b';
+        setTimeout(() => document.getElementById('ytUrl').style.borderColor = '', 1500);
+        return;
+      }
+
+      if (ph) ph.remove();
+      const existing = box.querySelector('iframe');
+      if (existing) existing.remove();
+
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`;
+      iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+      iframe.allowFullscreen = true;
+      box.appendChild(iframe);
+    }
+
+    document.getElementById('ytUrl').addEventListener('keydown', e => {
+      if (e.key === 'Enter') loadVideo();
+    });
+  </script>
+</body>
+</html>
