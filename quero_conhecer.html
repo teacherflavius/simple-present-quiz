@@ -380,6 +380,53 @@
       margin-top: 24px;
     }
 
+    .trial-cta-wrapper {
+      display: flex;
+      justify-content: center;
+      padding: 30px 24px 60px;
+    }
+
+    .btn-trial {
+      background: var(--accent-green);
+      color: var(--white);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: clamp(1rem, 2.5vw, 1.3rem);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 20px 42px;
+      border: 3px solid var(--white);
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 6px 30px rgba(27,187,92,0.55);
+      transition: transform 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-trial::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%);
+      transform: translateX(-100%);
+      transition: transform 0.5s;
+    }
+
+    .btn-trial:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 10px 40px rgba(27,187,92,0.7);
+    }
+
+    .btn-trial:hover::after {
+      transform: translateX(100%);
+    }
+
     .cta-wrapper {
       display: flex;
       justify-content: center;
@@ -444,7 +491,8 @@
       .benefits-list,
       .availability-list { text-align: left; }
       .price-pulse { width: 100%; padding: 16px 18px; }
-      .btn-inscricao { padding: 17px 36px; }
+      .btn-inscricao,
+      .btn-trial { width: 100%; padding: 17px 26px; }
     }
   </style>
 </head>
@@ -541,6 +589,10 @@
 
     <p class="registration-note">⏳ As inscrições ficam abertas até acabar as vagas.</p>
   </section>
+
+  <div class="trial-cta-wrapper">
+    <a href="https://wa.me/5534998349756?text=Teacher%2C%20quero%20marcar%20uma%20aula%20experimental%20gratuita" class="btn-trial">AGENDAR AULA EXPERIMENTAL</a>
+  </div>
 
 </body>
 </html>
