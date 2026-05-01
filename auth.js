@@ -140,6 +140,28 @@
     return session.user;
   }
 
+  async function savePrivateStudentData(data) {
+    const client = getClient();
+    if (!client) throw new Error("Supabase não configurado.");
+    const response = await client.rpc("upsert_my_private_student_data", {
+      target_cpf: normalizeCpf(data.cpf),
+      target_whatsapp: normalizeWhatsapp(data.whatsapp),
+      target_pix_key: normalizePixKey(data.pix_key),
+      target_consent_lgpd: data.consent_lgpd !== false
+    });
+    if (response.error) throw response.error;
+    return response.data;
+  }
+
+  async function getPrivateStudentData() {
+    const client = getClient();
+    const user = await getUser();
+    if (!client || !user) return null;
+    const response = await client.rpc("get_my_private_student_data");
+    if (response.error) return null;
+    return Array.isArray(response.data) && response.data.length ? response.data[0] : null;
+  }
+
   async function signUp(name, email, password) {
     const client = getClient();
     if (!client) throw new Error("Supabase não configurado.");
@@ -173,9 +195,6 @@
 
     const enrollmentMetadata = {
       name: data.name,
-      cpf: cleanCpf,
-      whatsapp: cleanWhatsapp,
-      pix_key: pixKey,
       availability: availability,
       enrollment_code: enrollmentCode,
       enrolled: true
@@ -194,9 +213,6 @@
         id: userId,
         name: data.name,
         email: data.email,
-        cpf: cleanCpf,
-        whatsapp: cleanWhatsapp,
-        pix_key: pixKey,
         availability: availability,
         enrollment_code: enrollmentCode,
         enrolled: true
@@ -204,6 +220,17 @@
 
       const profileResponse = await client.from("profiles").upsert(profilePayload).select().single();
       if (profileResponse.error) console.warn("Não foi possível atualizar profiles com os dados de matrícula:", profileResponse.error.message);
+
+      try {
+        await savePrivateStudentData({
+          cpf: cleanCpf,
+          whatsapp: cleanWhatsapp,
+          pix_key: pixKey,
+          consent_lgpd: data.consent_lgpd !== false
+        });
+      } catch (privateDataError) {
+        console.warn("Não foi possível salvar os dados privados do aluno:", privateDataError.message);
+      }
     }
 
     return { user: response.data ? response.data.user : null, enrollment_code: enrollmentCode };
@@ -229,19 +256,17 @@
     const user = await getUser();
     if (!client || !user) return null;
     const response = await client.from("profiles").select("*").eq("id", user.id).single();
+    const privateData = await getPrivateStudentData();
     const fallbackProfile = {
       id: user.id,
       name: user.user_metadata && user.user_metadata.name || "",
       email: user.email,
-      cpf: user.user_metadata && user.user_metadata.cpf || "",
-      whatsapp: user.user_metadata && user.user_metadata.whatsapp || "",
-      pix_key: user.user_metadata && user.user_metadata.pix_key || "",
       availability: user.user_metadata && user.user_metadata.availability || {},
       enrollment_code: user.user_metadata && user.user_metadata.enrollment_code || "",
       enrolled: user.user_metadata && user.user_metadata.enrolled || false
     };
-    if (response.error) return fallbackProfile;
-    return Object.assign({}, fallbackProfile, response.data);
+    const profile = response.error ? fallbackProfile : Object.assign({}, fallbackProfile, response.data);
+    return Object.assign({}, profile, privateData || {});
   }
 
   async function updateProfile(data) {
@@ -265,9 +290,6 @@
       id: user.id,
       name: data.name,
       email: user.email,
-      cpf: cleanCpf,
-      whatsapp: cleanWhatsapp,
-      pix_key: pixKey,
       availability: availability,
       enrollment_code: currentProfile && currentProfile.enrollment_code || user.user_metadata && user.user_metadata.enrollment_code || "",
       enrolled: currentProfile && (currentProfile.enrolled === true || currentProfile.enrolled === "true") || user.user_metadata && (user.user_metadata.enrolled === true || user.user_metadata.enrolled === "true") || false
@@ -276,12 +298,16 @@
     const profileResponse = await client.from("profiles").upsert(profilePayload).select().single();
     if (profileResponse.error) throw profileResponse.error;
 
+    await savePrivateStudentData({
+      cpf: cleanCpf,
+      whatsapp: cleanWhatsapp,
+      pix_key: pixKey,
+      consent_lgpd: data.consent_lgpd !== false
+    });
+
     const metadataResponse = await client.auth.updateUser({
       data: {
         name: data.name,
-        cpf: cleanCpf,
-        whatsapp: cleanWhatsapp,
-        pix_key: pixKey,
         availability: availability,
         enrollment_code: profilePayload.enrollment_code,
         enrolled: profilePayload.enrolled
@@ -289,7 +315,11 @@
     });
     if (metadataResponse.error) throw metadataResponse.error;
 
-    return profileResponse.data;
+    return Object.assign({}, profileResponse.data, {
+      cpf: cleanCpf,
+      whatsapp: cleanWhatsapp,
+      pix_key: pixKey
+    });
   }
 
   async function saveActivityResult(result) {
@@ -330,6 +360,8 @@
     getSession: getSession,
     getUser: getUser,
     requireAuth: requireAuth,
+    savePrivateStudentData: savePrivateStudentData,
+    getPrivateStudentData: getPrivateStudentData,
     signUp: signUp,
     enrollStudent: enrollStudent,
     signIn: signIn,
