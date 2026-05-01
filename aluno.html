@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Teacher Flávio - Aluno</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase_config.js?v=20260427-5"></script>
+  <script src="auth.js?v=20260427-5"></script>
+  <link rel="stylesheet" href="home.css?v=20260427-5">
+</head>
+<body>
+  <div class="container">
+    <div class="header"><h1>Teacher Flávio</h1></div>
+    <div class="divider"></div>
+    <div class="menu-grid">
+      <a id="enrollmentCard" class="menu-button enrollment" href="/matricula/"><span><span class="icon">🪪</span>MATRÍCULA</span><span class="arrow">›</span></a>
+      <a class="menu-button" href="/area-do-estudante/"><span><span class="icon">🎓</span>ÁREA DO ESTUDANTE</span><span class="arrow">›</span></a>
+      <a class="menu-button" href="https://youtube.com/@teacherflavio" target="_blank" rel="noopener noreferrer"><span><span class="icon">▶️</span>YOUTUBE</span><span class="arrow">›</span></a>
+      <a class="menu-button" href="https://www.instagram.com/teacher.flavius" target="_blank" rel="noopener noreferrer"><span><span class="icon">📸</span>INSTAGRAM</span><span class="arrow">›</span></a>
+    </div>
+    <div id="professorAdminLink" class="footer-admin" style="display:none;"><a class="professor-button" href="/professor/">ÁREA DO PROFESSOR</a></div>
+  </div>
+  <script src="home.js?v=20260428-1"></script>
+  <script src="animated_cards.js?v=20260427-5"></script>
+</body>
+</html>
