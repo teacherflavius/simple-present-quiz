@@ -16,15 +16,6 @@
     return value;
   }
 
-  function escapeHtml(value) {
-    return String(value || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/\"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-
   function injectRecordedLessonsField() {
     var lessonMaterialInput = document.getElementById("lessonMaterialUrl");
     var whatsappInput = document.getElementById("whatsappGroupUrl");
@@ -114,40 +105,6 @@
     }
   }
 
-  function renderResourceLink(url, label) {
-    if (!url) return "";
-    return '<a class="menu-button recorded-lessons-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer" style="margin-top:10px;">' +
-      '<span><span class="icon">🔗</span>' + escapeHtml(label) + '</span><span class="arrow">›</span>' +
-    '</a>';
-  }
-
-  async function addRecordedLessonsToStudentPage() {
-    var content = document.getElementById("studentClassContent");
-    if (!content) return;
-
-    var ready = await waitForAuthResources();
-    if (!ready) return;
-
-    try {
-      var client = Auth.getClient();
-      var response = await client.rpc("get_my_student_class");
-      if (response.error) throw response.error;
-      var rows = response.data || [];
-      if (!rows.length) return;
-
-      rows.forEach(function (row, index) {
-        if (!row.recorded_lessons_url) return;
-        var cards = content.querySelectorAll(".class-card");
-        var card = cards[index] || cards[0];
-        if (!card || card.querySelector(".recorded-lessons-link")) return;
-        var linkArea = card.querySelector("div[style*='border-top']") || card;
-        linkArea.insertAdjacentHTML("beforeend", renderResourceLink(row.recorded_lessons_url, "AULAS GRAVADAS"));
-      });
-    } catch (error) {
-      console.warn("Não foi possível carregar link das aulas gravadas para o aluno:", error.message || error);
-    }
-  }
-
   function initTeacherClassPage() {
     if (!document.getElementById("classResourcesForm")) return;
     injectRecordedLessonsField();
@@ -156,23 +113,8 @@
     setTimeout(loadRecordedLessonsUrl, 1000);
   }
 
-  function initStudentMyClassPage() {
-    if (!document.getElementById("studentClassContent")) return;
-    setTimeout(addRecordedLessonsToStudentPage, 500);
-    setTimeout(addRecordedLessonsToStudentPage, 1400);
-
-    var content = document.getElementById("studentClassContent");
-    if (content && window.MutationObserver) {
-      var observer = new MutationObserver(function () {
-        addRecordedLessonsToStudentPage();
-      });
-      observer.observe(content, { childList: true, subtree: true });
-    }
-  }
-
   function init() {
     initTeacherClassPage();
-    initStudentMyClassPage();
   }
 
   if (document.readyState === "loading") {
