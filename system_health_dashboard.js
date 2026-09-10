@@ -8,19 +8,8 @@
 })(typeof window !== "undefined" ? window : null, function () {
   "use strict";
 
-  const HEALTH_LABELS = Object.freeze({
-    healthy: "SAUDÁVEL",
-    degraded: "ATENÇÃO",
-    critical: "CRÍTICO"
-  });
-
-  const PROBE_LABELS = Object.freeze({
-    home: "Página inicial",
-    health: "Endpoint de saúde",
-    login: "Login",
-    student_access: "Acesso do aluno"
-  });
-
+  const HEALTH_LABELS = Object.freeze({ healthy: "SAUDÁVEL", degraded: "ATENÇÃO", critical: "CRÍTICO" });
+  const PROBE_LABELS = Object.freeze({ home: "Página inicial", health: "Endpoint de saúde", login: "Login", student_access: "Acesso do aluno" });
   const ISSUE_LABELS = Object.freeze({
     critical_application_errors: "Erros críticos da aplicação",
     http_5xx_burst: "Burst de respostas HTTP 5xx",
@@ -50,30 +39,27 @@
     data_quality_lesson_orphan_class: "Registro de lição com turma inexistente",
     data_quality_frequency_invalid_subject_ref: "Frequência com referência de aluno inválida",
     data_quality_tuition_subject_mismatch: "Mensalidade com referência de aluno inconsistente",
-    data_quality_payment_attempt_subject_mismatch: "Tentativa de pagamento com referência inconsistente"
+    data_quality_payment_attempt_subject_mismatch: "Tentativa de pagamento com referência inconsistente",
+    auth_health_check_stalled: "Health check de autenticação atrasado",
+    auth_user_without_profile: "Usuário Auth sem perfil",
+    auth_active_profile_without_user: "Aluno ativo sem usuário Auth",
+    auth_active_student_unconfirmed: "Aluno ativo com autenticação não confirmada",
+    auth_active_student_without_identity: "Aluno ativo sem identidade de login",
+    auth_admin_missing_user: "Administrador sem usuário Auth",
+    auth_admin_without_verified_mfa: "Administrador sem MFA verificado",
+    auth_profile_email_mismatch: "E-mail Auth/perfil divergente sem vínculo registrado",
+    auth_google_link_missing_user: "Vínculo Google sem usuário Auth",
+    auth_google_link_missing_profile: "Vínculo Google sem perfil",
+    auth_google_link_cleanup_pending: "Cleanup de conta legada Google pendente",
+    auth_stale_unverified_mfa_factor: "Fator MFA não verificado antigo"
   });
 
-  function toString(value) {
-    return value == null ? "" : String(value);
-  }
-
+  function toString(value) { return value == null ? "" : String(value); }
   function escapeHtml(value) {
-    return toString(value)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
+    return toString(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
-
-  function toArray(value) {
-    return Array.isArray(value) ? value : [];
-  }
-
-  function toObject(value) {
-    return value && typeof value === "object" && !Array.isArray(value) ? value : {};
-  }
-
+  function toArray(value) { return Array.isArray(value) ? value : []; }
+  function toObject(value) { return value && typeof value === "object" && !Array.isArray(value) ? value : {}; }
   function normalizeHealthBlock(raw) {
     const health = toObject(raw);
     return Object.freeze({
@@ -86,55 +72,40 @@
       issues: Object.freeze(toArray(health.issues).map(toObject))
     });
   }
-
   function normalizeDashboard(raw) {
     const dashboard = toObject(raw);
     return Object.freeze({
       generatedAt: toString(dashboard.generated_at),
       health: normalizeHealthBlock(dashboard.health),
       dataQuality: normalizeHealthBlock(dashboard.data_quality),
+      authHealth: normalizeHealthBlock(dashboard.auth_health),
       probes: Object.freeze(toArray(dashboard.probes).map(toObject)),
       crons: Object.freeze(toArray(dashboard.crons).map(toObject)),
       alerts: Object.freeze(toArray(dashboard.alerts).map(toObject))
     });
   }
-
   function formatDateTime(value) {
     if (!value) return "—";
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return toString(value);
-    return new Intl.DateTimeFormat("pt-BR", {
-      dateStyle: "short",
-      timeStyle: "short",
-      timeZone: "America/Sao_Paulo"
-    }).format(date);
+    return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" }).format(date);
   }
-
   function formatMetric(value) {
     const number = Number(value || 0);
     return Number.isFinite(number) ? String(number) : "0";
   }
-
   function statusClass(status) {
     if (status === "healthy" || status === "succeeded" || status === "sent") return "health-good";
     if (status === "critical" || status === "failed") return "health-critical";
     return "health-warning";
   }
-
-  function healthLabel(status) {
-    return HEALTH_LABELS[status] || "SEM DADOS";
-  }
-
-  function issueLabel(code) {
-    return ISSUE_LABELS[code] || code || "Evento operacional";
-  }
-
+  function healthLabel(status) { return HEALTH_LABELS[status] || "SEM DADOS"; }
+  function issueLabel(code) { return ISSUE_LABELS[code] || code || "Evento operacional"; }
   function renderSummary(documentRef, dashboard) {
     const health = dashboard.health;
     const metrics = health.metrics;
     const summary = documentRef.getElementById("healthSummary");
     if (!summary) return;
-
     summary.innerHTML = [
       '<article class="health-card ' + statusClass(health.status) + '"><span>Estado global</span><strong>' + escapeHtml(healthLabel(health.status)) + '</strong></article>',
       '<article class="health-card"><span>Issues ativos</span><strong>' + escapeHtml(health.issueCount) + '</strong></article>',
@@ -144,55 +115,43 @@
       '<article class="health-card"><span>Último health check</span><strong class="health-card-date">' + escapeHtml(formatDateTime(health.completedAt)) + '</strong></article>'
     ].join("");
   }
-
   function renderIssueRows(issues) {
     if (!issues.length) return '<div class="health-empty health-good">Nenhuma invariante ativa.</div>';
     return issues.map(function (issue) {
       const severity = toString(issue.severity) || "warning";
-      const details = toObject(issue.details);
-      return '<article class="health-row ' + statusClass(severity) + '">' +
-        '<div><strong>' + escapeHtml(issueLabel(toString(issue.code))) + '</strong>' +
-        '<small>' + escapeHtml(JSON.stringify(details)) + '</small></div>' +
-        '<span>' + escapeHtml(severity === "critical" ? "CRÍTICO" : "ATENÇÃO") + '</span>' +
-      '</article>';
+      return '<article class="health-row ' + statusClass(severity) + '"><div><strong>' + escapeHtml(issueLabel(toString(issue.code))) + '</strong><small>' + escapeHtml(JSON.stringify(toObject(issue.details))) + '</small></div><span>' + escapeHtml(severity === "critical" ? "CRÍTICO" : "ATENÇÃO") + '</span></article>';
     }).join("");
   }
-
   function renderIssues(documentRef, dashboard) {
     const element = documentRef.getElementById("healthIssues");
-    if (!element) return;
-    element.innerHTML = renderIssueRows(dashboard.health.issues);
+    if (element) element.innerHTML = renderIssueRows(dashboard.health.issues);
   }
-
-  function renderDataQuality(documentRef, dashboard) {
-    const quality = dashboard.dataQuality;
-    const summary = documentRef.getElementById("dataQualitySummary");
-    const issues = documentRef.getElementById("dataQualityIssues");
+  function renderSpecializedHealth(documentRef, block, ids, title) {
+    const summary = documentRef.getElementById(ids.summary);
+    const issues = documentRef.getElementById(ids.issues);
     if (summary) {
       summary.innerHTML = [
-        '<article class="health-card ' + statusClass(quality.status) + '"><span>Qualidade dos dados</span><strong>' + escapeHtml(healthLabel(quality.status)) + '</strong></article>',
-        '<article class="health-card"><span>Findings ativos</span><strong>' + escapeHtml(quality.issueCount) + '</strong></article>',
-        '<article class="health-card"><span>Última verificação</span><strong class="health-card-date">' + escapeHtml(formatDateTime(quality.completedAt)) + '</strong></article>'
+        '<article class="health-card ' + statusClass(block.status) + '"><span>' + escapeHtml(title) + '</span><strong>' + escapeHtml(healthLabel(block.status)) + '</strong></article>',
+        '<article class="health-card"><span>Findings ativos</span><strong>' + escapeHtml(block.issueCount) + '</strong></article>',
+        '<article class="health-card"><span>Última verificação</span><strong class="health-card-date">' + escapeHtml(formatDateTime(block.completedAt)) + '</strong></article>'
       ].join("");
     }
-    if (issues) issues.innerHTML = renderIssueRows(quality.issues);
+    if (issues) issues.innerHTML = renderIssueRows(block.issues);
   }
-
+  function renderDataQuality(documentRef, dashboard) {
+    renderSpecializedHealth(documentRef, dashboard.dataQuality, { summary: "dataQualitySummary", issues: "dataQualityIssues" }, "Qualidade dos dados");
+  }
+  function renderAuthHealth(documentRef, dashboard) {
+    renderSpecializedHealth(documentRef, dashboard.authHealth, { summary: "authHealthSummary", issues: "authHealthIssues" }, "Autenticação e contas");
+  }
   function renderProbes(documentRef, dashboard) {
     const body = documentRef.getElementById("healthProbeTableBody");
     if (!body) return;
     body.innerHTML = dashboard.probes.map(function (probe) {
       const ok = probe.ok === true;
-      return '<tr>' +
-        '<td><strong>' + escapeHtml(PROBE_LABELS[probe.target_key] || probe.target_key) + '</strong></td>' +
-        '<td><span class="health-pill ' + (ok ? "health-good" : "health-critical") + '">' + (ok ? "OK" : "FALHA") + '</span></td>' +
-        '<td>' + escapeHtml(probe.http_status == null ? "—" : probe.http_status) + '</td>' +
-        '<td>' + escapeHtml(probe.latency_ms == null ? "—" : probe.latency_ms + " ms") + '</td>' +
-        '<td>' + escapeHtml(formatDateTime(probe.checked_at)) + '</td>' +
-      '</tr>';
+      return '<tr><td><strong>' + escapeHtml(PROBE_LABELS[probe.target_key] || probe.target_key) + '</strong></td><td><span class="health-pill ' + (ok ? "health-good" : "health-critical") + '">' + (ok ? "OK" : "FALHA") + '</span></td><td>' + escapeHtml(probe.http_status == null ? "—" : probe.http_status) + '</td><td>' + escapeHtml(probe.latency_ms == null ? "—" : probe.latency_ms + " ms") + '</td><td>' + escapeHtml(formatDateTime(probe.checked_at)) + '</td></tr>';
     }).join("");
   }
-
   function renderCrons(documentRef, dashboard) {
     const body = documentRef.getElementById("healthCronTableBody");
     if (!body) return;
@@ -201,15 +160,9 @@
       const failed = cron.last_status === "failed" || cron.active === false;
       const className = failed ? "health-critical" : stale ? "health-warning" : "health-good";
       const label = failed ? "FALHA" : stale ? "ATRASADO" : "OK";
-      return '<tr>' +
-        '<td><strong>' + escapeHtml(cron.jobname) + '</strong></td>' +
-        '<td><span class="health-pill ' + className + '">' + label + '</span></td>' +
-        '<td>' + escapeHtml(toString(cron.last_status) || "—") + '</td>' +
-        '<td>' + escapeHtml(formatDateTime(cron.last_completed_at)) + '</td>' +
-      '</tr>';
+      return '<tr><td><strong>' + escapeHtml(cron.jobname) + '</strong></td><td><span class="health-pill ' + className + '">' + label + '</span></td><td>' + escapeHtml(toString(cron.last_status) || "—") + '</td><td>' + escapeHtml(formatDateTime(cron.last_completed_at)) + '</td></tr>';
     }).join("");
   }
-
   function renderAlerts(documentRef, dashboard) {
     const body = documentRef.getElementById("healthAlertTableBody");
     if (!body) return;
@@ -218,20 +171,15 @@
       return;
     }
     body.innerHTML = dashboard.alerts.map(function (alert) {
-      return '<tr>' +
-        '<td><strong>' + escapeHtml(issueLabel(toString(alert.issue_code))) + '</strong></td>' +
-        '<td><span class="health-pill ' + statusClass(toString(alert.severity)) + '">' + escapeHtml(toString(alert.severity).toUpperCase()) + '</span></td>' +
-        '<td>' + escapeHtml(toString(alert.status)) + '</td>' +
-        '<td>' + escapeHtml(formatDateTime(alert.created_at)) + '</td>' +
-      '</tr>';
+      return '<tr><td><strong>' + escapeHtml(issueLabel(toString(alert.issue_code))) + '</strong></td><td><span class="health-pill ' + statusClass(toString(alert.severity)) + '">' + escapeHtml(toString(alert.severity).toUpperCase()) + '</span></td><td>' + escapeHtml(toString(alert.status)) + '</td><td>' + escapeHtml(formatDateTime(alert.created_at)) + '</td></tr>';
     }).join("");
   }
-
   function renderDashboard(documentRef, rawDashboard) {
     const dashboard = normalizeDashboard(rawDashboard);
     renderSummary(documentRef, dashboard);
     renderIssues(documentRef, dashboard);
     renderDataQuality(documentRef, dashboard);
+    renderAuthHealth(documentRef, dashboard);
     renderProbes(documentRef, dashboard);
     renderCrons(documentRef, dashboard);
     renderAlerts(documentRef, dashboard);
@@ -239,7 +187,6 @@
     if (generated) generated.textContent = "Atualizado em " + formatDateTime(dashboard.generatedAt || dashboard.health.completedAt);
     return dashboard;
   }
-
   function setMessage(documentRef, message, type) {
     const element = documentRef.getElementById("healthMessage");
     if (!element) return;
@@ -247,42 +194,28 @@
     element.className = "health-message" + (type ? " " + type : "");
     element.hidden = !message;
   }
-
-  function wait(milliseconds, windowRef) {
-    return new Promise(function (resolve) { windowRef.setTimeout(resolve, milliseconds); });
-  }
-
+  function wait(milliseconds, windowRef) { return new Promise(function (resolve) { windowRef.setTimeout(resolve, milliseconds); }); }
   async function waitForDependencies(windowRef) {
     for (let attempt = 0; attempt < 30; attempt += 1) {
-      if (
-        windowRef.Auth && typeof windowRef.Auth.getClient === "function" &&
-        windowRef.ProfessorMfaGate && typeof windowRef.ProfessorMfaGate.requireAal2 === "function"
-      ) return true;
+      if (windowRef.Auth && typeof windowRef.Auth.getClient === "function" && windowRef.ProfessorMfaGate && typeof windowRef.ProfessorMfaGate.requireAal2 === "function") return true;
       await wait(150, windowRef);
     }
     return false;
   }
-
   async function assertTeacher(client) {
     const response = await client.rpc("is_teacher_admin");
     if (response.error) throw response.error;
     return response.data === true;
   }
-
   async function loadDashboard(client) {
     const response = await client.functions.invoke("get-system-health-dashboard", { body: {} });
     if (response.error) throw response.error;
-    const data = toObject(response.data);
-    return toObject(data.dashboard);
+    return toObject(toObject(response.data).dashboard);
   }
-
   async function refresh(dependencies) {
     const documentRef = dependencies.documentRef;
     const button = documentRef.getElementById("healthRefreshButton");
-    if (button) {
-      button.disabled = true;
-      button.textContent = "ATUALIZANDO...";
-    }
+    if (button) { button.disabled = true; button.textContent = "ATUALIZANDO..."; }
     setMessage(documentRef, "Carregando saúde operacional...", "info");
     try {
       const dashboard = await loadDashboard(dependencies.client);
@@ -293,45 +226,28 @@
       setMessage(documentRef, "Não foi possível carregar a saúde do sistema: " + (error.message || "erro desconhecido") + ".", "error");
       throw error;
     } finally {
-      if (button) {
-        button.disabled = false;
-        button.textContent = "ATUALIZAR";
-      }
+      if (button) { button.disabled = false; button.textContent = "ATUALIZAR"; }
     }
   }
-
   async function initialize(dependencies) {
     const windowRef = dependencies && dependencies.windowRef;
     const documentRef = dependencies && dependencies.documentRef;
-    if (!windowRef || !documentRef) return false;
-    if (!(await waitForDependencies(windowRef))) return false;
-
+    if (!windowRef || !documentRef || !(await waitForDependencies(windowRef))) return false;
     const client = windowRef.Auth.getClient();
     const teacher = await assertTeacher(client).catch(function () { return false; });
     if (!teacher) {
       windowRef.location.href = "/login/?next=" + encodeURIComponent("/saude-do-sistema/");
       return false;
     }
-
     await windowRef.ProfessorMfaGate.requireAal2({ client: client });
     const runtime = { windowRef: windowRef, documentRef: documentRef, client: client };
     const button = documentRef.getElementById("healthRefreshButton");
     if (button && !button.dataset.healthBound) {
       button.dataset.healthBound = "true";
-      button.addEventListener("click", function () {
-        refresh(runtime).catch(function () {});
-      });
+      button.addEventListener("click", function () { refresh(runtime).catch(function () {}); });
     }
     await refresh(runtime);
     return true;
   }
-
-  return Object.freeze({
-    normalizeDashboard: normalizeDashboard,
-    healthLabel: healthLabel,
-    issueLabel: issueLabel,
-    statusClass: statusClass,
-    renderDashboard: renderDashboard,
-    initialize: initialize
-  });
+  return Object.freeze({ normalizeDashboard: normalizeDashboard, healthLabel: healthLabel, issueLabel: issueLabel, statusClass: statusClass, renderDashboard: renderDashboard, initialize: initialize });
 });
