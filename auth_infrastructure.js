@@ -16,6 +16,7 @@
     passwordRecoveryCss: "/password_recovery_login.css?v=20260909-1",
     passwordRecoveryJs: "/password_recovery_login.js?v=20260909-1",
     studentAreaGuardJs: "/student_area_route_guard.js?v=20260909-1",
+    accountSecurityJs: "/account_security_ui.js?v=20260910-1",
     infrastructureCss: "/auth_infrastructure.css?v=20260902-1"
   });
 
@@ -37,7 +38,6 @@
 
   function appendStylesheetOnce(selector, href) {
     if (document.querySelector(selector)) return;
-
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = href;
@@ -46,7 +46,6 @@
 
   function appendScriptOnce(selector, src) {
     if (document.querySelector(selector)) return;
-
     const script = document.createElement("script");
     script.src = src;
     script.defer = true;
@@ -63,9 +62,7 @@
 
   function loadAnimatedCards() {
     loadResourceWaiter()
-      .then(function () {
-        appendScriptOnce('script[src^="animated_cards.js"]', ASSETS.animatedCardsJs);
-      })
+      .then(function () { appendScriptOnce('script[src^="animated_cards.js"]', ASSETS.animatedCardsJs); })
       .catch(function (error) {
         console.warn("Não foi possível preparar o helper de recursos para os assets compartilhados:", error);
         appendScriptOnce('script[src^="animated_cards.js"]', ASSETS.animatedCardsJs);
@@ -74,12 +71,8 @@
 
   function loadAccessTracker() {
     loadResourceWaiter()
-      .then(function () {
-        appendScriptOnce('script[src^="/student_access_tracker.js"]', ASSETS.accessTrackerJs);
-      })
-      .catch(function (error) {
-        console.warn("Não foi possível inicializar o rastreamento de acesso:", error);
-      });
+      .then(function () { appendScriptOnce('script[src^="/student_access_tracker.js"]', ASSETS.accessTrackerJs); })
+      .catch(function (error) { console.warn("Não foi possível inicializar o rastreamento de acesso:", error); });
   }
 
   function loadSharedAssets() {
@@ -96,7 +89,6 @@
 
   function loadLoginPasswordRecoveryAssets(pathname) {
     if (pathname !== PATHS.login) return;
-
     appendStylesheetOnce('link[href^="/password_recovery_login.css"]', ASSETS.passwordRecoveryCss);
     runWhenDomReady(function () {
       appendScriptOnce('script[src^="/password_recovery_login.js"]', ASSETS.passwordRecoveryJs);
@@ -105,15 +97,20 @@
 
   function loadStudentAreaGuard(pathname) {
     if (pathname !== PATHS.studentArea) return;
-
     runWhenDomReady(function () {
       appendScriptOnce('script[src^="/student_area_route_guard.js"]', ASSETS.studentAreaGuardJs);
     });
   }
 
+  function loadAccountSecurity(pathname) {
+    if (pathname !== PATHS.profile) return;
+    runWhenDomReady(function () {
+      appendScriptOnce('script[src^="/account_security_ui.js"]', ASSETS.accountSecurityJs);
+    });
+  }
+
   function loadGoogleAuthUiAssets(pathname) {
     if (!isGoogleAuthUiPage(pathname)) return;
-
     appendStylesheetOnce('link[href^="/google_auth_ui.css"]', ASSETS.googleAuthCss);
     runWhenDomReady(function () {
       appendScriptOnce('script[src^="/google_auth_ui.js"]', ASSETS.googleAuthJs);
@@ -122,10 +119,8 @@
 
   function showConfigWarning() {
     appendStylesheetOnce('link[href^="/auth_infrastructure.css"]', ASSETS.infrastructureCss);
-
     runWhenDomReady(function () {
       if (document.getElementById("supabase-config-warning")) return;
-
       const warning = document.createElement("div");
       warning.id = "supabase-config-warning";
       warning.className = "supabase-config-warning";
@@ -142,10 +137,8 @@
     loadGoogleAuthUiAssets(pathname);
     loadLoginPasswordRecoveryAssets(pathname);
     loadStudentAreaGuard(pathname);
+    loadAccountSecurity(pathname);
   }
 
-  window.AuthInfrastructure = Object.freeze({
-    initialize: initialize,
-    showConfigWarning: showConfigWarning
-  });
+  window.AuthInfrastructure = Object.freeze({ initialize: initialize, showConfigWarning: showConfigWarning });
 })();
